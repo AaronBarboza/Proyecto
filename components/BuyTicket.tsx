@@ -25,6 +25,7 @@ function BusTicketForm() {
 
   const fechaActual = new Date().toLocaleDateString('es-ES');
 
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setShowModal(true);
@@ -56,7 +57,7 @@ function BusTicketForm() {
     handleShowAboutPay();
   };
 
-  {/*Correo*/}
+  {/Correo/}
 
   
 
@@ -77,17 +78,17 @@ function BusTicketForm() {
   };
 
     emailjs.send('<service_xbiqwg6>', '<plantilla_n2hof0i>', templateParams, '<RWxLClg-me91RdSat>')
-      .then((response) => {
+      .then((response: any) => {
         console.log('Correo electrónico enviado con éxito:', response);
         // Aquí puedes mostrar una notificación de éxito o realizar otras acciones después de enviar el correo electrónico
       })
-      .catch((error) => {
+      .catch((error: any) => {
         console.error('Error al enviar el correo electrónico:', error);
         // Aquí puedes mostrar una notificación de error o realizar otras acciones en caso de error
       });
   };
   
-  {/*QR*/}
+  {/QR/}
 
   let qrCodeData = JSON.stringify(formData);
 
@@ -117,6 +118,24 @@ function BusTicketForm() {
         [name]: value
       }));
     };
+
+     {/Metodos de Pago/}
+
+    const handleConfirmCompra = () => {
+      if (formData.metodoPago === 'paypal') {
+        const paypalUrl = 'https://www.paypal.com'; // URL de PayPal
+        const win = window.open(paypalUrl, '_blank');
+        window.open('https://www.paypal.com', '_blank');
+      } else if (formData.metodoPago === 'efectivo') {
+        // Lógica para abrir ventana de efectivo
+        window.open('https://www.example.com/efectivo', '_blank');
+      } else if (formData.metodoPago === 'tarjeta') {
+        // Lógica para abrir ventana de tarjeta de banco
+        window.open('https://www.example.com/tarjeta', '_blank');
+      }
+    };
+    
+
 
   }
 
@@ -210,6 +229,7 @@ function BusTicketForm() {
           </table>
 
       {/*Boton de comprar Boletos*/}
+      <Button variant="primary">Comprar Boletos</Button>
 
       <Button type="submit" style={{ 
         backgroundColor: "#3C6E71", 
@@ -380,7 +400,7 @@ function BusTicketForm() {
           Tarjeta de Banco
         </label>
       </div>
-    </div>
+      </div>
 
       <br/><br/>
           <div className="d-flex justify-content-center">
@@ -403,14 +423,14 @@ function BusTicketForm() {
             </button>
           </div>
         </form>
-      </Modal.Body>
+        </Modal.Body>
       </Modal>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+      <Modal show={showModalPay} onHide={handleCloseAboutPay} size="lg" centered>
         <Modal.Header closeButton style={{ backgroundColor: '#3C6E71', color: 'white', borderBottom: 'none' }}>
-          <Modal.Title style={{ fontSize: '2em', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
-            Factura
-          </Modal.Title>
+        <Modal.Title style={{ fontSize: '2em', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
+          Factura
+        </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <h1 style={{ fontSize: '2em', color: '#3C6E71', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
