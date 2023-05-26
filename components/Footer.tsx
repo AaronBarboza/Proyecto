@@ -12,7 +12,7 @@ const Footer = () => {
       <div className="d-flex justify-content-center align-items-center">
         <div className="text-center">
         <p style={{ color: 'black', backgroundColor: '#f1e8dc', padding: '10px', borderRadius: '5px' }}>
-          © {2023} {["Copyright Grupo7 <3"]}
+          © {2023} {["Universidad Nacional"]}
         </p>
 
           

@@ -106,7 +106,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
       textAlign: 'center', 
       fontSize: '1.5em', 
       fontFamily: 'Arial, sans-serif'
-    }}>Sobre nosotros</h1>
+    }}>SSobre nosotros</h1>
   </Modal.Header>
   <Modal.Body>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -123,7 +123,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
       }}>
         <thead style={{ textAlign: 'center' }}>
           <tr>
-            <th style={{ padding: '10px' }}>Misión</th>
+            <th style={{ padding: '10px' }}>Mision</th>
             <th style={{ padding: '10px' }}>Visión</th>
           </tr>
         </thead>

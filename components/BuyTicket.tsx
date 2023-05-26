@@ -229,7 +229,6 @@ function BusTicketForm() {
           </table>
 
       {/*Boton de comprar Boletos*/}
-      <Button variant="primary">Comprar Boletos</Button>
 
       <Button type="submit" style={{ 
         backgroundColor: "#3C6E71", 

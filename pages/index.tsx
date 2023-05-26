@@ -7,7 +7,7 @@ import { useState } from 'react';
 import Footer from '../components/Footer';
 
 const IndexPage = () => {
-  const [username, setUsername] = useState('AaronBarboza');
+  const [username, setUsername] = useState('Gabriela Aleman');
   const [repositories, setRepositories] = useState([]);
   const [showPersonal, setShowPersonal] = useState(false);
 
