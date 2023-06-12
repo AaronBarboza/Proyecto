@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import emailjs from 'emailjs-com';
 import QRCode from 'qrcode.react';
 //import InvoiceModal from './InvoiceModal';
+
 
 
 function BusTicketForm() {
@@ -10,7 +11,7 @@ function BusTicketForm() {
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [date, setDate] = useState('');
-
+  /// Modal de formulario Pago
   const [showModal, setShowModal] = useState(false);
   const [showModalPay, setShowModalPay] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,9 +21,10 @@ function BusTicketForm() {
     fecha: '',
     origen: '',
     destino: '',
-    metodoPago: ''
+    metodoPago: '',
+    hora: ''
   });
-
+  //Para ACTUALIZAR LA FECHA
   const fechaActual = new Date().toLocaleDateString('es-ES');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -57,8 +59,6 @@ function BusTicketForm() {
   };
 
   {/*Correo*/}
-
-  
 
   const handleSendEmail = () => {
     const templateParams = {
@@ -117,27 +117,189 @@ function BusTicketForm() {
         [name]: value
       }));
     };
-
+  
   }
+
+  {/*Metodos de Pago*/}
+
+   const handleConfirmCompra = () => {
+    if (formData.metodoPago === 'paypal') {
+      const paypalUrl = 'https://www.paypal.com'; // URL de PayPal
+      const win = window.open(paypalUrl, '_blank');
+      window.open('https://www.paypal.com', '_blank');
+    } else if (formData.metodoPago === 'efectivo') {
+      // Lógica para abrir ventana de efectivo
+      window.open('https://www.example.com/efectivo', '_blank');
+    } else if (formData.metodoPago === 'tarjeta') {
+      // Lógica para abrir ventana de tarjeta de banco
+      window.open('https://www.example.com/tarjeta', '_blank');
+    }
+  };
+  
+  {/*Tabla con filtro*/}
+
+    const results = [
+      {
+        id: 1,
+        origin: 'Ciudad Neily',
+        destination: 'San Jose',
+        tarifa: '₡5000',
+        time: '08:00 AM'
+      },
+      {
+        id: 2,
+        origin: 'Paso Canoas',
+        destination: 'San Jose',
+        tarifa: '₡9.889',
+        time: '07:00 AM'
+      },
+      {
+        id: 3,
+        origin: 'Perez Zeledon',
+        destination: 'San Jose',
+        tarifa: '₡4000',       
+        time: '12:00 AM'
+        },
+        {
+          id: 4,
+          origin: 'Buenos Aires',
+          destination: 'San Jose',
+          tarifa: '₡7000', 
+          time: '11:00 AM'
+        },
+        {
+          id: 5,
+          origin: 'Cartago',
+          destination: 'San Jose',
+          tarifa: '₡2000',
+          time: '02:00 PM'
+        },
+        {
+          id: 6,
+          origin: 'Quepos',
+          destination: 'San Jose',
+          tarifa: '₡4500',
+          time: '10:00 AM'
+        },
+      ];
+
+      const filterResults = () => {
+        if (!origin && !destination && !date) {
+          return results;
+        }
+      
+        return results.filter((result) => {
+          const originMatch = origin ? result.origin.toLowerCase().includes(origin.toLowerCase()) : true;
+          const destinationMatch = destination ? result.destination.toLowerCase().includes(destination.toLowerCase()) : true;
+          //const dateMatch = date ? result.date === date : true;
+      
+          return originMatch && destinationMatch/* && dateMatch*/;
+        });
+      };
+      
+      const [HasResults, setHasResults] = useState(false);
+      useEffect(() => {
+        
+        const filteredResults = filterResults();
+        if (filteredResults.length > 0) {
+          setHasResults(true);
+        } else {
+          setHasResults(false);
+        }
+      }, [origin, destination, date]);
+    //Para ACTUALIZAR LA FECHA
+  
+    const [setFechaActual] = useState<string[]>([]);  
+    //Para visualizar los asientos
+    const MiniBus = () => {
+      const [seats, setSeats] = useState(Array(60).fill(false)); // Array para representar el estado de los asientos
+    
+      const toggleSeat = (index: number) => {
+        const updatedSeats = [...seats];
+        updatedSeats[index] = !updatedSeats[index];
+        setSeats(updatedSeats);
+      };
+    }
+
+    //Para ACTUALIZAR variables en primer formulario
+    const [origen, setOrigen] = useState('');
+    const [destino, setDestino] = useState('');
+    const [tarifa, setTarifa] = useState('');
+    const [fecha, setFecha] = useState('');
+    const [hora, setHora] = useState('');
+
+    interface Result {
+      id: number;
+      origin: string;
+      destination: string;
+      tarifa: string;
+      time: string;
+    }
+    
+    const handleComprarClick = (result: Result) => {
+      setOrigen(result.origin);
+      setDestino(result.destination);
+      setTarifa(result.tarifa);
+    
+      const dateObj = new Date(result.time);
+      
+      const timeStr = dateObj.toTimeString().split(' ')[0];
+      const day = dateObj.getDate().toString().padStart(2, '0');
+      const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+      const year = dateObj.getFullYear().toString();
+
+      const dateStr = `${year}-${month}-${day}`;
+
+
+
+      setFecha(dateStr);
+      setHora(timeStr);
+    };
+    
+    const handleFechaChange = (value: string) => {
+      setFecha(value);
+  
+      const timeParts = results[0].time.split(':');
+      const hour = parseInt(timeParts[0], 10);
+      const minute = parseInt(timeParts[1], 10);
+  
+      const dateObj = new Date();
+      dateObj.setHours(hour);
+      dateObj.setMinutes(minute);
+  
+      const dateStr = dateObj.toISOString().split('T')[0];
+      const timeStr = dateObj.toTimeString().split(' ')[0];
+  
+      setFecha(dateStr);
+      setHora(timeStr);
+    };
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 1);
+    
 
   return (
       <form onSubmit={handleSubmit} style={{ maxWidth: '1500px', margin: 'auto', display: 'flex', flexDirection: 'column' }}>
       
-      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-    
-          <label htmlFor="origin" style={{marginLeft: "20px" }}>Origen:</label>
-          <input
+      <div style={{
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap"
+      }}>
+      <label htmlFor="origin" style={{ marginLeft: "20px" }}>Origen:</label>
+        <input
           type="text"
           id="origin"
           value={origin}
           onChange={(e) => setOrigin(e.target.value)}
-          style={{ 
-          width: '300px',
-          height: "40px",
-          backgroundColor: '#3C6E71',
-          color: 'white',
-          borderRadius: '5px'
-        }}
+          style={{
+            width: '300px',
+            height: "40px",
+            backgroundColor: '#3C6E71',
+            color: 'white',
+            borderRadius: '5px'
+          }}
         />
 
         <label htmlFor="destination" style={{ marginLeft: "20px" }}>Destino:</label>
@@ -146,82 +308,83 @@ function BusTicketForm() {
           id="destination"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          style={{ 
+          style={{
             width: '300px',
             height: "40px",
             backgroundColor: '#3C6E71',
-            color: 'white', 
+            color: 'white',
             borderRadius: '5px',
             marginLeft: "10px"
           }}
         />
 
-        <label htmlFor="date" style={{ marginLeft: "20px" }}>Fecha:</label>
-        <input
-          type="date"
-          id="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ 
-            width: '300px',
-            height: "40px",
-            backgroundColor: '#3C6E71',
-            color: 'white', 
-            borderRadius: '5px',
-            marginLeft: "10px"
-          }}
-        />
+      
       </div>
 
-
       <br></br>
       <br></br>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f1e8dc', borderRadius: '5px', marginBottom: '20px', overflowX: 'auto' }}>
+      <table style={{ flexWrap:"wrap", width: '100%', borderCollapse: 'collapse', backgroundColor: '#f1e8dc', borderRadius: '5px', marginBottom: '20px', overflowX: 'auto' }}>
       <thead>
         <tr style={{ backgroundColor: '#3C6E71', color: 'white' }}>
-          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Ruta</th>
+          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71', borderTopLeftRadius: '5px' }}>Origen</th>
+          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Destino</th>
           <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Tarifa</th>
           <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Fecha</th>
           <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Hora</th>
+          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71', borderTopRightRadius: '5px' }}>Acciones</th>
         </tr>
       </thead>
-
       <tbody>
-        <tr>
-          <td style={{ padding: '12px 8px' }}>Ciudad Neily-San José</td>
-          <td style={{ padding: '12px 8px' }}>₡5000</td>
-          <td style={{ padding: '12px 8px' }}>{fechaActual}</td>
-          <td style={{ padding: '12px 8px' }}>HH:MM</td>
-        </tr>
-        <tr>
-          <td style={{ padding: '12px 8px' }}>Paso Canoas-San José</td>
-          <td style={{ padding: '12px 8px' }}>₡9.889</td>
-          <td style={{ padding: '12px 8px' }}>{fechaActual}</td>
-          <td style={{ padding: '12px 8px' }}>HH:MM</td>
-        </tr>
-        <tr>
-          <td style={{ padding: '12px 8px' }}>Perez Zeledon - San jose</td>
-          <td style={{ padding: '12px 8px' }}>₡4000</td>
-          <td style={{ padding: '12px 8px' }}>{fechaActual}</td>
-          <td style={{ padding: '12px 8px' }}>HH:MM</td>
-        </tr>
-      </tbody>
-          </table>
+        {filterResults().map((result, index) => (
+          <tr key={result.id}>
+            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopLeftRadius: '5px' }}>{result.origin}</td>
+            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.destination}</td>
+            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.tarifa}</td>
+            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
+            <input
+              type="date"
+              id={`date-${index}`}
+              value={date[index]}     
+              style={{
+                width: '120px',
+                height: '40px',
+                backgroundColor: '#3C6E71',
+                color: 'white',
+                borderRadius: '5px',
+                marginLeft: '10px'
+              }}
+              min={new Date().toISOString().split('T')[0]}
+            />
+          </td>
 
-      {/*Boton de comprar Boletos*/}
+          <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.time}</td>
+          <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
+          <Button
+            type="submit"
+            onClick={() => handleComprarClick(result)}
+            style={{
+              backgroundColor: '#3C6E71',
+              borderRadius: '5px',
+              color: 'white',
+              fontSize: '1.2em',
+              width: '120px',
+              height: '40px',
+              cursor: 'hand',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            Comprar
+          </Button>
+          </td>
+        </tr>
+          ))}
+        </tbody>
+      </table>
 
-      <Button type="submit" style={{ 
-        backgroundColor: "#3C6E71", 
-        borderRadius: '5px',
-        color: 'white',
-        fontSize: '1.2em',
-        width: '100%',
-        height: '45px',
-        cursor: 'pointer'
-      }}>
-        Comprar boleto
-      </Button>
+      {/* Aqui se mostraran las ventanas emergentes*/}
 
       <Modal show={showModal} onHide={handleClose}>
         {/* Contenido del modal */}
@@ -238,179 +401,224 @@ function BusTicketForm() {
             }}>Validaremos tus Datos</h1>
         </Modal.Header>
         <Modal.Body>
-    <form>
-      <div className="form-group">
-        <label htmlFor="nombre" style={{ color: '#3C6E71' }}>
-          Nombre:
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="nombre"
-          name="nombre"
-          required
-          onChange={handleInputChange}
-        />
+        <form>
+          
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+        <div style={{ marginRight: '20px' }}>
+        <div className="form-group">
+          <label htmlFor="nombre" style={{ color: '#3C6E71' }}>
+            Nombre:
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            id="nombre"
+            name="nombre"
+            required
+            onChange={handleInputChange}
+            style={{ width: '200px' }}
+          />
+        </div>
+        <br /><br />
+        <div className="form-group">
+          <label htmlFor="email" style={{ color: '#3C6E71' }}>
+            Correo electrónico:
+          </label>
+          <input
+            type="email"
+            className="form-control"
+            id="email"
+            name="email"
+            required
+            onChange={handleInputChange}
+            style={{ width: '200px' }}
+          />
+        </div>
+        <br /><br />
+        <div className="form-group">
+          <label htmlFor="cantidad" style={{ color: '#3C6E71' }}>
+            Cantidad de boletos:
+          </label>
+          <input
+            type="number"
+            className="form-control cantidad-input"
+            id="cantidad"
+            name="cantidad"
+            min="0"
+            max="10"
+            required
+            onChange={handleInputChange}
+          />
+        </div>
       </div>
-
-      <div className="form-group">
-        <label htmlFor="email" style={{ color: '#3C6E71' }}>
-          Correo electrónico:
-        </label>
-        <input
-          type="email"
-          className="form-control"
-          id="email"
-          name="email"
-          required
-          onChange={handleInputChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="cantidad" style={{ color: '#3C6E71' }}>
-          Cantidad de boletos:
-        </label>
-        <input
-          type="number"
-          className="form-control"
-          id="cantidad"
-          name="cantidad"
-          min="0" // Establece el mínimo valor a 0
-          max="10" // Establece el máximo valor a 10
-          required
-          onChange={handleInputChange}
-        />
-      </div>
-
-
-      <div className="form-group">
-        <label htmlFor="fecha" style={{ color: '#3C6E71' }}>
-          Fecha de viaje:
-        </label>
-        <input
-          type="date"
-          className="form-control"
-          id="fecha"
-          name="fecha"
-          required
-          onChange={handleInputChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="origen" style={{ color: '#3C6E71' }}>
-          Origen:
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="origen"
-          name="origen"
-          required
-          onChange={handleInputChange}
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="destino" style={{ color: '#3C6E71' }}>
-          Destino:
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="destino"
-          name="destino"
-          required
-          onChange={handleInputChange}
-        />
-      </div>
-      <br/><br/>
-      <h1 style={{ 
-        backgroundColor: '#3C6E71',
-        color: 'white', 
-        padding: '5px', 
-        borderRadius: '5px', 
-        boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)', 
-        textAlign: 'center', 
-        fontSize: '1.5em', 
-        fontFamily: 'Arial, sans-serif'
-      }}>Metodo de Pago</h1>
-      <br/><br/>
       
-      <div style={{ textAlign: 'center' }}>
-      <div className="form-check form-check-inline form-check-custom">
-        <input
-          className="form-check-input"
-          type="radio"
-          name="metodoPago"
-          id="paypal"
-          value="paypal"
-          required
-          onChange={handleInputChange}
-        />
-        <label className="form-check-label" htmlFor="paypal">
-          PayPal
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
+      <div>
+        <label htmlFor="fecha" style={{ color: '#3C6E71' }}>
+          Fecha de viaje: {fecha}
         </label>
       </div>
-      <div className="form-check form-check-inline form-check-custom">
-        <input
-          className="form-check-input"
-          type="radio"
-          name="metodoPago"
-          id="efectivo"
-          value="efectivo"
-          required
-          onChange={handleInputChange}
-        />
-        <label className="form-check-label" htmlFor="efectivo">
-          Efectivo
+      <div>
+        <label htmlFor="origen" style={{ color: '#3C6E71' }}>
+          Origen: {origen}
         </label>
       </div>
-      <div className="form-check form-check-inline form-check-custom">
-        <input
-          className="form-check-input"
-          type="radio"
-          name="metodoPago"
-          id="tarjeta"
-          value="tarjeta"
-          required
-          onChange={handleInputChange}
-        />
-        <label className="form-check-label" htmlFor="tarjeta">
-          Tarjeta de Banco
+      <div>
+        <label htmlFor="destino" style={{ color: '#3C6E71' }}>
+          Destino: {destino}
+        </label>
+      </div>
+      <div>
+        <label htmlFor="tarifa" style={{ color: '#3C6E71' }}>
+          Tarifa: {tarifa}
+        </label>
+      </div>
+      <div>
+        <label htmlFor="hora" style={{ color: '#3C6E71' }}>
+          Hora: {hora}
         </label>
       </div>
     </div>
 
-      <br/><br/>
-          <div className="d-flex justify-content-center">
-          <button
-            type="submit"
-            style={{ backgroundColor: '#3C6E71', color: 'white' }}
-            className="btn btn-lg btn-primary mr-3"
-            onClick={handleShowAboutPay} // Agrega el evento onClick para mostrar el Modal
-          >
-            Confirmar Compra
-          </button>
-            <button
-              type="button"
-              className="btn btn-lg btn-danger ml-3"
-              data-dismiss="modal"
-              onClick={handleClose}
-              style={{ marginLeft: '10px', marginRight: '10px' }}
-            >
-              Cancelar
-            </button>
+  
+
+     
+    </div>
+
+    <br></br>
+          
+          <h1 style={{ 
+            backgroundColor: '#3C6E71',
+            color: 'white', 
+            padding: '5px', 
+            borderRadius: '5px', 
+            boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)', 
+            textAlign: 'center', 
+            fontSize: '1.5em', 
+            fontFamily: 'Arial, sans-serif'
+          }}>Asientos</h1>
+          <label htmlFor="destino" style={{ color: '#3C6E71', display: 'flex', justifyContent: 'space-between' }}>
+          <span>Total: 45</span>
+          <span>Ocupados:</span>
+          <span>Disponibles:</span>
+        </label>
+        <br></br>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {[...Array(4)].map((_, rowIndex) => (
+          <div key={rowIndex} style={{ display: 'flex', marginBottom: '10px' }}>
+            {Array.from(
+              { length: 9 },
+              (_, seatIndex) => (
+                <div
+                  key={seatIndex}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    margin: '5px',
+                    borderRadius: '50%',
+                    backgroundColor: Math.random() < 0.5 ? 'red' : 'green',
+                  }}
+                >
+                  <span>{rowIndex * 11 + seatIndex + 1}</span>
+                </div>
+              ),
+            )}
           </div>
+        ))}
+      </div>
+
+
+
+        <br></br>
+          <h1 style={{ 
+            backgroundColor: '#3C6E71',
+            color: 'white', 
+            padding: '5px', 
+            borderRadius: '5px', 
+            boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)', 
+            textAlign: 'center', 
+            fontSize: '1.5em', 
+            fontFamily: 'Arial, sans-serif'
+          }}>Metodo de Pago</h1>
+          <br /><br />
+          <div style={{ textAlign: 'center' }}>
+          <div className="form-check form-check-inline form-check-custom">
+            <input
+              className="form-check-input"
+              type="radio"
+              name="metodoPago"
+              id="paypal"
+              value="paypal"
+              required
+              onChange={handleInputChange}
+            />
+            <label className="form-check-label" htmlFor="paypal">
+              PayPal
+            </label>
+          </div>
+          <div className="form-check form-check-inline form-check-custom">
+            <input
+              className="form-check-input"
+              type="radio"
+              name="metodoPago"
+              id="efectivo"
+              value="efectivo"
+              required
+              onChange={handleInputChange}
+            />
+            <label className="form-check-label" htmlFor="efectivo">
+              Efectivo
+            </label>
+          </div>
+          <div className="form-check form-check-inline form-check-custom">
+            <input
+              className="form-check-input"
+              type="radio"
+              name="metodoPago"
+              id="tarjeta"
+              value="tarjeta"
+              required
+              onChange={handleInputChange}
+            />
+            <label className="form-check-label" htmlFor="tarjeta">
+              Tarjeta de Banco
+            </label>
+          </div>
+          </div>
+
+          <br/><br/>
+              <div className="d-flex justify-content-center">
+              <button
+                type="submit"
+                style={{ backgroundColor: '#3C6E71', color: 'white' }}
+                className="btn btn-lg btn-primary mr-3"
+                onClick={handleShowAboutPay} // Agrega el evento onClick para mostrar el Modal
+              >
+                Confirmar Compra
+              </button>
+                <button
+                  type="button"
+                  className="btn btn-lg btn-danger ml-3"
+                  data-dismiss="modal"
+                  onClick={handleClose}
+                  style={{ marginLeft: '10px', marginRight: '10px' }}
+                >
+                  Cancelar
+                </button>
+              </div>
         </form>
-      </Modal.Body>
+        </Modal.Body>
       </Modal>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+      <Modal show={showModalPay} onHide={handleCloseAboutPay} size="lg" centered>
         <Modal.Header closeButton style={{ backgroundColor: '#3C6E71', color: 'white', borderBottom: 'none' }}>
-          <Modal.Title style={{ fontSize: '2em', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
-            Factura
-          </Modal.Title>
+        <Modal.Title style={{ fontSize: '2em', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
+          Factura
+        </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <h1 style={{ fontSize: '2em', color: '#3C6E71', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
@@ -420,10 +628,11 @@ function BusTicketForm() {
             <div style={{ paddingRight: '50px' }}>
             <p>Nombre: {formData.nombre}</p>
             <p>Correo electrónico: {formData.email}</p>
+            <p>Origen: {origen}</p>
+            <p>Destino: {destino}</p>
             <p>Cantidad de boletos: {formData.cantidad}</p>
-            <p>Fecha de viaje: {formData.fecha}</p>
-            <p>Origen: {formData.origen}</p>
-            <p>Destino: {formData.destino}</p>
+            <p>Fecha de viaje: {fecha}</p>
+            <p>Hora: {hora}</p>
             <p>Método de pago: {formData.metodoPago}</p> 
             </div>
             <div style={{ display: 'flex', alignItems: 'center', marginLeft: '300px' }}>
