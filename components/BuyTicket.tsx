@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import emailjs from 'emailjs-com';
 import QRCode from 'qrcode.react';
+import { time, timeStamp } from 'console';
 //import InvoiceModal from './InvoiceModal';
 
 
@@ -52,14 +53,14 @@ function BusTicketForm() {
       [name]: value
     }));
   };
-
+/*
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     handleShowAboutPay();
   };
-
+*/
   {/*Correo*/}
-
+  
   const handleSendEmail = () => {
     const templateParams = {
       to_email: formData.email,
@@ -101,15 +102,16 @@ function BusTicketForm() {
       fecha: '',
       origen: '',
       destino: '',
-      metodoPago: ''
+      metodoPago: '',
+      hora: ''
     });
-  
+  /*
     const handleShowModal = () => {
       const qrCodeData = JSON.stringify(formData);
       setQRCodeData(qrCodeData);
       setShowModal(true);
     };
-  
+    
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
       setFormData((prevFormData) => ({
@@ -117,7 +119,7 @@ function BusTicketForm() {
         [name]: value
       }));
     };
-  
+  */
   }
 
   {/*Metodos de Pago*/}
@@ -187,40 +189,40 @@ function BusTicketForm() {
         if (!origin && !destination && !date) {
           return results;
         }
-      
         return results.filter((result) => {
           const originMatch = origin ? result.origin.toLowerCase().includes(origin.toLowerCase()) : true;
           const destinationMatch = destination ? result.destination.toLowerCase().includes(destination.toLowerCase()) : true;
-          //const dateMatch = date ? result.date === date : true;
-      
-          return originMatch && destinationMatch/* && dateMatch*/;
+          return originMatch && destinationMatch;
         });
       };
       
       const [HasResults, setHasResults] = useState(false);
       useEffect(() => {
-        
         const filteredResults = filterResults();
         if (filteredResults.length > 0) {
           setHasResults(true);
         } else {
           setHasResults(false);
         }
-      }, [origin, destination, date]);
+      }, [origin, destination]);
     //Para ACTUALIZAR LA FECHA
   
-    const [setFechaActual] = useState<string[]>([]);  
-    //Para visualizar los asientos
-    const MiniBus = () => {
-      const [seats, setSeats] = useState(Array(60).fill(false)); // Array para representar el estado de los asientos
-    
-      const toggleSeat = (index: number) => {
-        const updatedSeats = [...seats];
-        updatedSeats[index] = !updatedSeats[index];
-        setSeats(updatedSeats);
-      };
-    }
-
+    const [setFechaActual] = useState<string[]>([]);   
+    const [totalSeats] = useState(36);
+    const [occupiedSeats, setOccupiedSeats] = useState(0); // Inicialmente no hay asientos ocupados
+  
+    const handleInputasientos = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedQuantity = parseInt(event.target.value);
+      if (!isNaN(selectedQuantity)) {
+        if (selectedQuantity >= 0 && selectedQuantity <= totalSeats) {
+          setOccupiedSeats(selectedQuantity);
+          setCantidadBoletos(selectedQuantity); // Update the quantity of tickets state
+        }
+      }
+    };
+  
+    const availableSeats = totalSeats - occupiedSeats;
+    const [cantidadBoletos, setCantidadBoletos] = useState(0);
     //Para ACTUALIZAR variables en primer formulario
     const [origen, setOrigen] = useState('');
     const [destino, setDestino] = useState('');
@@ -240,85 +242,43 @@ function BusTicketForm() {
       setOrigen(result.origin);
       setDestino(result.destination);
       setTarifa(result.tarifa);
-    
-      const dateObj = new Date(result.time);
-      
-      const timeStr = dateObj.toTimeString().split(' ')[0];
-      const day = dateObj.getDate().toString().padStart(2, '0');
-      const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-      const year = dateObj.getFullYear().toString();
-
-      const dateStr = `${year}-${month}-${day}`;
-
-
-
-      setFecha(dateStr);
-      setHora(timeStr);
+      setHora(result.time);
+      setFecha(date);
     };
-    
-    const handleFechaChange = (value: string) => {
-      setFecha(value);
-  
-      const timeParts = results[0].time.split(':');
-      const hour = parseInt(timeParts[0], 10);
-      const minute = parseInt(timeParts[1], 10);
-  
-      const dateObj = new Date();
-      dateObj.setHours(hour);
-      dateObj.setMinutes(minute);
-  
-      const dateStr = dateObj.toISOString().split('T')[0];
-      const timeStr = dateObj.toTimeString().split(' ')[0];
-  
-      setFecha(dateStr);
-      setHora(timeStr);
-    };
-    const minDate = new Date();
-    minDate.setDate(minDate.getDate() + 1);
-    
-
+   
   return (
       <form onSubmit={handleSubmit} style={{ maxWidth: '1500px', margin: 'auto', display: 'flex', flexDirection: 'column' }}>
       
-      <div style={{
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap"
-      }}>
-      <label htmlFor="origin" style={{ marginLeft: "20px" }}>Origen:</label>
-        <input
-          type="text"
-          id="origin"
-          value={origin}
-          onChange={(e) => setOrigin(e.target.value)}
-          style={{
-            width: '300px',
-            height: "40px",
-            backgroundColor: '#3C6E71',
-            color: 'white',
-            borderRadius: '5px'
-          }}
-        />
-
-        <label htmlFor="destination" style={{ marginLeft: "20px" }}>Destino:</label>
-        <input
-          type="text"
-          id="destination"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-          style={{
-            width: '300px',
-            height: "40px",
-            backgroundColor: '#3C6E71',
-            color: 'white',
-            borderRadius: '5px',
-            marginLeft: "10px"
-          }}
-        />
-
-      
+      <div style={{display: "flex",flexDirection: "row",justifyContent: "space-between",alignItems: "center",flexWrap: "wrap"}}>
+        <label htmlFor="origin" style={{ marginLeft: "20px" }}>Origen:</label>
+          <input
+            type="text"
+            id="origin"
+            value={origin}
+            onChange={(e) => setOrigin(e.target.value)}
+            style={{
+              width: '300px',
+              height: "40px",
+              backgroundColor: '#3C6E71',
+              color: 'white',
+              borderRadius: '5px'
+            }}
+          />
+          <label htmlFor="destination" style={{ marginLeft: "20px" }}>Destino:</label>
+          <input
+            type="text"
+            id="destination"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            style={{
+              width: '300px',
+              height: "40px",
+              backgroundColor: '#3C6E71',
+              color: 'white',
+              borderRadius: '5px',
+              marginLeft: "10px"
+            }}
+          />
       </div>
 
       <br></br>
@@ -357,7 +317,6 @@ function BusTicketForm() {
               min={new Date().toISOString().split('T')[0]}
             />
           </td>
-
           <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.time}</td>
           <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
           <Button
@@ -436,20 +395,20 @@ function BusTicketForm() {
         </div>
         <br /><br />
         <div className="form-group">
-          <label htmlFor="cantidad" style={{ color: '#3C6E71' }}>
-            Cantidad de boletos:
-          </label>
-          <input
-            type="number"
-            className="form-control cantidad-input"
-            id="cantidad"
-            name="cantidad"
-            min="0"
-            max="10"
-            required
-            onChange={handleInputChange}
-          />
-        </div>
+        <label htmlFor="cantidad" style={{ color: '#3C6E71' }}>
+          Cantidad de boletos:
+        </label>
+        <input
+          type="number"
+          className="form-control cantidad-input"
+          id="cantidad"
+          name="cantidad"
+          min="0"
+          max="15"
+          required
+          onChange={handleInputasientos}
+        />
+      </div>
       </div>
       
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
@@ -498,35 +457,32 @@ function BusTicketForm() {
             fontFamily: 'Arial, sans-serif'
           }}>Asientos</h1>
           <label htmlFor="destino" style={{ color: '#3C6E71', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Total: 45</span>
-          <span>Ocupados:</span>
-          <span>Disponibles:</span>
-        </label>
+            <span>Total: {totalSeats}</span>
+            <span>Ocupados: {occupiedSeats}</span>
+            <span>Disponibles: {availableSeats}</span>
+          </label>
         <br></br>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {[...Array(4)].map((_, rowIndex) => (
-          <div key={rowIndex} style={{ display: 'flex', marginBottom: '10px' }}>
-            {Array.from(
-              { length: 9 },
-              (_, seatIndex) => (
-                <div
-                  key={seatIndex}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '40px',
-                    height: '40px',
-                    margin: '5px',
-                    borderRadius: '50%',
-                    backgroundColor: Math.random() < 0.5 ? 'red' : 'green',
-                  }}
-                >
-                  <span>{rowIndex * 11 + seatIndex + 1}</span>
-                </div>
-              ),
-            )}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '455px' }}>
+        {Array.from({ length: 4 }, (_, seatIndex) => (
+          <div key={seatIndex} style={{ display: 'flex', marginBottom: '5px' }}>
+            {[...Array(9)].map((_, rowIndex) => (
+              <div
+                key={rowIndex}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  margin: '5px',
+                  backgroundColor: seatIndex + rowIndex * 4 + 1 <= occupiedSeats ? '#3077B0' : 'gray',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid black',
+                  borderRadius: '4px',
+                }}
+              >
+                <span style={{ fontSize: '0.8em' }}>{seatIndex + rowIndex * 4 + 1}</span>
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -630,10 +586,10 @@ function BusTicketForm() {
             <p>Correo electrónico: {formData.email}</p>
             <p>Origen: {origen}</p>
             <p>Destino: {destino}</p>
-            <p>Cantidad de boletos: {formData.cantidad}</p>
+            <p>Cantidad de boletos: {cantidadBoletos}</p>
             <p>Fecha de viaje: {fecha}</p>
             <p>Hora: {hora}</p>
-            <p>Método de pago: {formData.metodoPago}</p> 
+            <p>Método de pago: {formData.metodoPago}</p>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', marginLeft: '300px' }}>
             </div>
@@ -666,4 +622,4 @@ function BusTicketForm() {
   );
 }
 
-export default BusTicketForm;
+export default BusTicketForm; 
