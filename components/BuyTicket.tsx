@@ -11,7 +11,7 @@ function BusTicketForm() {
   /// Modal de formulario
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
-  const [date, setDate] = useState('');
+  //const [date, setDate] = useState('');
   /// Modal de formulario Pago
   const [showModal, setShowModal] = useState(false);
   const [showModalPay, setShowModalPay] = useState(false);
@@ -246,9 +246,13 @@ function BusTicketForm() {
       setFecha(date);
     };
 
-    const [dates, setDates] = useState(Array(filterResults.length).fill(''));
-
-   
+    const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
+    const [date, setDate] = useState("");
+  
+    const handleDateChange = (index: number, selectedDate: string) => {
+      setSelectedRowIndex(index);
+      setDate(selectedDate);
+    };
   return (
       <form onSubmit={handleSubmit} style={{ maxWidth: '1500px', margin: 'auto', display: 'flex', flexDirection: 'column' }}>
       
@@ -287,7 +291,7 @@ function BusTicketForm() {
       <br></br>
       <br></br>
 
-      <table style={{ flexWrap:"wrap", width: '100%', borderCollapse: 'collapse', backgroundColor: '#f1e8dc', borderRadius: '5px', marginBottom: '20px', overflowX: 'auto' }}>
+      <table style={{ flexWrap: "wrap", width: '100%', borderCollapse: 'collapse', backgroundColor: '#f1e8dc', borderRadius: '5px', marginBottom: '20px', overflowX: 'auto' }}>
       <thead>
         <tr style={{ backgroundColor: '#3C6E71', color: 'white' }}>
           <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71', borderTopLeftRadius: '5px' }}>Origen</th>
@@ -304,55 +308,50 @@ function BusTicketForm() {
             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopLeftRadius: '5px' }}>{result.origin}</td>
             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.destination}</td>
             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.tarifa}</td>
-             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
+            <td style={{ padding: "12px 8px", borderBottom: "1px solid #3C6E71", borderTopRightRadius: "5px", textAlign: "center" }}>
               <input
                 type="date"
                 id={`date-${index}`}
-                value={dates[index]}
+                value={selectedRowIndex === index ? date : ""}
                 onChange={(e) => {
-                  const selectedDate = e.target.value;
-                  setDates((prevDates) => {
-                    const updatedDates = [...prevDates];
-                    updatedDates[index] = selectedDate;
-                    return updatedDates;
-                  });
+                  handleDateChange(index, e.target.value);
                 }}
                 style={{
-                  width: '120px',
-                  height: '40px',
-                  backgroundColor: '#3C6E71',
-                  color: 'white',
-                  borderRadius: '5px',
-                  marginLeft: '10px'
+                  width: "120px",
+                  height: "40px",
+                  backgroundColor: "#3C6E71",
+                  color: "white",
+                  borderRadius: "5px",
+                  marginLeft: "10px",
                 }}
-                min={new Date().toISOString().split('T')[0]}
+                min={new Date().toISOString().split("T")[0]}
               />
             </td>
-          <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.time}</td>
-          <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
-          <Button
-            type="submit"
-            onClick={() => handleComprarClick(result)}
-            style={{
-              backgroundColor: '#3C6E71',
-              borderRadius: '5px',
-              color: 'white',
-              fontSize: '1.2em',
-              width: '120px',
-              height: '40px',
-              cursor: 'hand',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            Comprar
-          </Button>
-          </td>
-        </tr>
-          ))}
-        </tbody>
-      </table>
+            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.time}</td>
+            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
+              <Button
+                type="submit"
+                onClick={() => handleComprarClick(result)}
+                style={{
+                  backgroundColor: '#3C6E71',
+                  borderRadius: '5px',
+                  color: 'white',
+                  fontSize: '1.2em',
+                  width: '120px',
+                  height: '40px',
+                  cursor: 'hand',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                Comprar
+              </Button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
 
       {/* Aqui se mostraran las ventanas emergentes*/}
 
@@ -424,8 +423,8 @@ function BusTicketForm() {
       
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
       <div>
-        <label htmlFor="fecha" style={{ color: '#3C6E71' }}>
-          Fecha de viaje: {dates}
+        <label htmlFor="fecha" style={{ color: '#3C6E7' }}>
+          Fecha de viaje: {date}
         </label>
       </div>
       <div>
@@ -598,7 +597,7 @@ function BusTicketForm() {
             <p>Origen: {origen}</p>
             <p>Destino: {destino}</p>
             <p>Cantidad de boletos: {cantidadBoletos}</p>
-            <p>Fecha de viaje: {dates}</p>
+            <p>Fecha de viaje: {date}</p>
             <p>Hora: {hora}</p>
             <p>Método de pago: {formData.metodoPago}</p>
             </div>
