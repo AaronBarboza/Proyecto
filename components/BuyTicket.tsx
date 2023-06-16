@@ -424,7 +424,7 @@ function BusTicketForm() {
       
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
       <div>
-        <label htmlFor="fecha" style={{ color: '#3C6E73' }}>
+        <label htmlFor="fecha" style={{ color: '#3C6E71' }}>
           Fecha de viaje: {dates}
         </label>
       </div>
