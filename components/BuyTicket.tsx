@@ -179,7 +179,7 @@ function BusTicketForm() {
         {
           id: 6,
           origin: 'Quepos',
-          destination: 'San Jose',
+          destination: 'Heredia',
           tarifa: '₡4500',
           time: '10:00 AM'
         },
@@ -245,6 +245,9 @@ function BusTicketForm() {
       setHora(result.time);
       setFecha(date);
     };
+
+    const [dates, setDates] = useState(Array(filterResults.length).fill(''));
+
    
   return (
       <form onSubmit={handleSubmit} style={{ maxWidth: '1500px', margin: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -301,22 +304,30 @@ function BusTicketForm() {
             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopLeftRadius: '5px' }}>{result.origin}</td>
             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.destination}</td>
             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.tarifa}</td>
-            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
-            <input
-              type="date"
-              id={`date-${index}`}
-              value={date[index]}     
-              style={{
-                width: '120px',
-                height: '40px',
-                backgroundColor: '#3C6E71',
-                color: 'white',
-                borderRadius: '5px',
-                marginLeft: '10px'
-              }}
-              min={new Date().toISOString().split('T')[0]}
-            />
-          </td>
+             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
+              <input
+                type="date"
+                id={`date-${index}`}
+                value={dates[index]}
+                onChange={(e) => {
+                  const selectedDate = e.target.value;
+                  setDates((prevDates) => {
+                    const updatedDates = [...prevDates];
+                    updatedDates[index] = selectedDate;
+                    return updatedDates;
+                  });
+                }}
+                style={{
+                  width: '120px',
+                  height: '40px',
+                  backgroundColor: '#3C6E71',
+                  color: 'white',
+                  borderRadius: '5px',
+                  marginLeft: '10px'
+                }}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </td>
           <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.time}</td>
           <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
           <Button
@@ -414,7 +425,7 @@ function BusTicketForm() {
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
       <div>
         <label htmlFor="fecha" style={{ color: '#3C6E71' }}>
-          Fecha de viaje: {fecha}
+          Fecha de viaje: {dates}
         </label>
       </div>
       <div>
@@ -587,7 +598,7 @@ function BusTicketForm() {
             <p>Origen: {origen}</p>
             <p>Destino: {destino}</p>
             <p>Cantidad de boletos: {cantidadBoletos}</p>
-            <p>Fecha de viaje: {fecha}</p>
+            <p>Fecha de viaje: {dates}</p>
             <p>Hora: {hora}</p>
             <p>Método de pago: {formData.metodoPago}</p>
             </div>

@@ -88,7 +88,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
       {
         id: 6,
         origin: 'Quepos',
-        destination: 'San José',
+        destination: 'Heredia',
         tarifa: '₡4500',
         date: fechaActual,
         time: '10:00 AM'
