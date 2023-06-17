@@ -4,6 +4,7 @@ import emailjs from 'emailjs-com';
 import QRCode from 'qrcode.react';
 import { time, timeStamp } from 'console';
 //import InvoiceModal from './InvoiceModal';
+import InvoiceModal from './factura';
 
 
 
@@ -12,8 +13,8 @@ function BusTicketForm() {
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [date, setDate] = useState('');
+
   /// Modal de formulario Pago
-  const [showModal, setShowModal] = useState(false);
   const [showModalPay, setShowModalPay] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -25,6 +26,7 @@ function BusTicketForm() {
     metodoPago: '',
     hora: ''
   });
+
   //Para ACTUALIZAR LA FECHA
   const fechaActual = new Date().toLocaleDateString('es-ES');
 
@@ -124,19 +126,49 @@ function BusTicketForm() {
 
   {/*Metodos de Pago*/}
 
-   const handleConfirmCompra = () => {
-    if (formData.metodoPago === 'paypal') {
-      const paypalUrl = 'https://www.paypal.com'; // URL de PayPal
-      const win = window.open(paypalUrl, '_blank');
-      window.open('https://www.paypal.com', '_blank');
-    } else if (formData.metodoPago === 'efectivo') {
-      // Lógica para abrir ventana de efectivo
-      window.open('https://www.example.com/efectivo', '_blank');
-    } else if (formData.metodoPago === 'tarjeta') {
-      // Lógica para abrir ventana de tarjeta de banco
-      window.open('https://www.example.com/tarjeta', '_blank');
-    }
-  };
+  // En el archivo BuyTicket.tsx
+const handleConfirmCompra = () => {
+  if (formData.metodoPago === 'paypal') {
+    setShowModal(true);
+  } else if (formData.metodoPago === 'efectivo') {
+    // Lógica para abrir ventana de efectivo
+    window.open('https://www.example.com/efectivo', '_blank');
+  } else if (formData.metodoPago === 'tarjeta') {
+    // Lógica para abrir ventana de tarjeta de banco
+    window.open('https://www.example.com/efectivo', '_blank');
+  }
+};
+
+// Nueva variable de estado para controlar la visibilidad del modal
+const [showModal, setShowModal] = useState(false);
+
+return (
+  <>
+    {/* Código existente del componente BuyTicket */}
+    
+    {/* Modal de factura */}
+    {showModal && (
+      <InvoiceModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        formData={{
+          nombre: formData.nombre,
+          email: formData.email,
+          cantidad: formData.cantidad,
+          fecha: formData.fecha,
+          origen: formData.origen,
+          destino: formData.destino,
+          metodoPago: formData.metodoPago,
+          hora: formData.hora,
+          // Agrega las demás propiedades de FormData aquí si las hay
+        }}
+        qrCodeData={qrCodeData}
+        handleSendEmail={handleSendEmail}
+      />
+    )}
+  </>
+);
+
   
   {/*Tabla con filtro*/}
 
