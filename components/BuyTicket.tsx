@@ -1,11 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import emailjs from 'emailjs-com';
 import QRCode from 'qrcode.react';
-import { time, timeStamp } from 'console';
-//import InvoiceModal from './InvoiceModal';
+import emailjs from 'emailjs-com';
+import html2canvas from 'html2canvas';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import 'firebase/database';
+import { ChangeEvent} from 'react';
+import { database, storage } from "../firebase/config";
+//import { NextApiRequest, NextApiResponse } from 'next';
+//import * as mustache from 'mustache';
 
-
+//import type { Query } from "firebase/database";
+//import * as functions from 'firebase-functions';
+//import * as admin from 'firebase-admin';
+//import * as nodemailer from 'nodemailer';
+//import firebase from 'firebase/app';
+//import mustache from 'mustache';
+//import * as admin from 'firebase-admin';
+//import { getDatabase, onValue } from "firebase/database";
+//import { deflate } from 'pako';
+//import jsPDF from 'jspdf';
+//import { time, timeStamp } from 'console';
+//import { PDFDocument } from 'pdf-lib';
 
 function BusTicketForm() {
   /// Modal de formulario
@@ -53,42 +69,158 @@ function BusTicketForm() {
       [name]: value
     }));
   };
-/*
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    handleShowAboutPay();
-  };
-*/
+
   {/*Correo*/}
-  
-  const handleSendEmail = () => {
-    const templateParams = {
-      to_email: formData.email,
-      from_name: 'Nombre Remitente', // Nombre remitente del correo electrónico
-      subject: 'Factura de compra', // Asunto del correo electrónico
-      body: `
-        Nombre: ${formData.nombre}
-        Correo electrónico: ${formData.email}
-        Cantidad de boletos: ${formData.cantidad}
-        Fecha de viaje: ${formData.fecha}
-        Origen: ${formData.origen}
-        Destino: ${formData.destino}
-        Método de pago: ${formData.metodoPago}
-      ` // Cuerpo del correo electrónico
+  const [fileContent, setFileContent] = useState('');
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result;
+        if (typeof content === 'string') {
+          setFileContent(content);
+        }
+      };
+      reader.readAsText(file);
+    }
   };
 
-    emailjs.send('<service_xbiqwg6>', '<plantilla_n2hof0i>', templateParams, '<RWxLClg-me91RdSat>')
-      .then((response) => {
-        console.log('Correo electrónico enviado con éxito:', response);
-        // Aquí puedes mostrar una notificación de éxito o realizar otras acciones después de enviar el correo electrónico
+  type EmailJSResponseStatus = {
+    status: number,
+    text: string,
+  }
+ 
+  function uploadAndSendEmail(file: File) {
+    // Crea una referencia de almacenamiento
+    const storageRef = ref(storage, 'images/' + file.name);
+  
+    // Sube el archivo de imagen y genera una URL de descarga
+    const uploadTask = uploadBytesResumable(storageRef, file);
+  
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        // Obtiene el progreso de la tarea, incluyendo el número de bytes subidos y el número total de bytes a subir
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+      },
+      (error) => {
+        // Maneja las subidas fallidas
+        console.error('Upload error:', error);
+      },
+      () => {
+        // Maneja las subidas exitosas al completarse y obtén la URL de descarga
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          console.log('File available at', downloadURL);
+  
+          // Construye la plantilla del correo utilizando cadenas de texto
+          const formData = {
+            nombre: 'Nombre del remitente', // Reemplaza con el valor correcto
+            email: 'email@example.com', // Reemplaza con el valor correcto
+          };
+          const attachments = [
+            {
+              name: 'comprobante.png',
+              data: downloadURL,
+            },
+          ];
+  
+          const emailTemplate = `
+            New message from ${formData.nombre}
+            You got a new message from ${formData.nombre}:
+
+            {{modal-content}}
+
+            ${attachments.length ? `
+              <img src="${attachments[0].data}" alt="${attachments[0].name}" style="max-width: 100%; height: auto;">
+              <p>
+                <a href="${attachments[0].data}" download="${attachments[0].name}">Descargar comprobante</a>
+              </p>
+            ` : ''}
+
+            Sent from ${formData.email}
+          `;
+          // Envía el correo con la plantilla renderizada
+          const templateParams = {
+            to_name: 'Recipient Name',
+            from_name: formData.nombre,
+            message: emailTemplate,
+            reply_to: formData.email,
+          };
+  
+          emailjs.send('service_narigrb', 'template_mha2rj2', templateParams, 'RWxLClg-me91RdSat')
+            .then((response: EmailJSResponseStatus) => {
+              console.log('SUCCESS!', response.status, response.text);
+            }, (err: Error) => {
+              console.error('FAILED...', err);
+            });
+        });
+      });
+  }
+  
+  const modalContentRef = useRef<HTMLDivElement>(null);
+  async function generarImage() {
+    const contentText = modalContentRef.current;
+  
+    if (!contentText) {
+      console.error('Error: contentText is null');
+      return;
+    }
+    const canvasOptions = {};
+    html2canvas(contentText, canvasOptions)
+      .then(async (canvas) => {
+        const resizedCanvas = resizeImage(canvas, 800, 600);
+  
+        const imgDataPNG = resizedCanvas.toDataURL('image/png', 0.05);
+        const filePNG = new File([b64toBlob(imgDataPNG, 'image/png')], 'comprobante.png', {
+          type: 'image/png',
+        });
+        uploadAndSendEmail(filePNG);
       })
       .catch((error) => {
-        console.error('Error al enviar el correo electrónico:', error);
-        // Aquí puedes mostrar una notificación de error o realizar otras acciones en caso de error
+        console.error('Error generating image:', error);
       });
-  };
+  }
+
+function b64toBlob(base64: string, type: string = ''): Blob {
+  const byteCharacters = atob(base64.replace(/^data:[^;]+;base64,/, ''));
+  const byteArrays: Uint8Array[] = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+    const slice = byteCharacters.slice(offset, offset + 1024);
+    const byteNumbers = new Array(slice.length);
+
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  return new Blob(byteArrays, { type });
+}
+
+function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: number): HTMLCanvasElement {
+  const width = canvas.width;
+  const height = canvas.height;
+  const ratio = Math.min(maxWidth / width, maxHeight / height);
+
+  const newCanvas = document.createElement('canvas');
+  newCanvas.width = width * ratio;
+  newCanvas.height = height * ratio;
+
+  const ctx = newCanvas.getContext('2d');
+  if (ctx) {
+    ctx.drawImage(canvas, 0, 0, width * ratio, height * ratio);
+  }
+
+  return newCanvas;
+}
   
-  {/*QR*/}
+
+{/*QR*/}
 
   let qrCodeData = JSON.stringify(formData);
 
@@ -253,6 +385,9 @@ function BusTicketForm() {
       setSelectedRowIndex(index);
       setDate(selectedDate);
     };
+    
+    
+
   return (
       <form onSubmit={handleSubmit} style={{ maxWidth: '1500px', margin: 'auto', display: 'flex', flexDirection: 'column' }}>
       
@@ -580,17 +715,18 @@ function BusTicketForm() {
         </Modal.Body>
       </Modal>
 
-      <Modal show={showModalPay} onHide={handleCloseAboutPay} size="lg" centered>
+      <Modal  show={showModalPay} onHide={handleCloseAboutPay} size="lg" centered>
         <Modal.Header closeButton style={{ backgroundColor: '#3C6E71', color: 'white', borderBottom: 'none' }}>
         <Modal.Title style={{ fontSize: '2em', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
           Factura
         </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h1 style={{ fontSize: '2em', color: '#3C6E71', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
+          <div id="modal-content" ref={modalContentRef} > 
+            <h1 style={{ fontSize: '2em', color: '#3C6E71', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
             ¡Compra Exitosa!
-          </h1>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            </h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ paddingRight: '50px' }}>
             <p>Nombre: {formData.nombre}</p>
             <p>Correo electrónico: {formData.email}</p>
@@ -603,28 +739,32 @@ function BusTicketForm() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', marginLeft: '300px' }}>
             </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '-150px' }}>
-            <QRCode value={qrCodeData} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '-150px' }}>
+              <QRCode value={qrCodeData} />
+            </div>
+            <div></div>
           </div>
         </Modal.Body>
         <Modal.Footer>
         <Button
-        variant="secondary"
-        onClick={handleSendEmail}
-        style={{
-          backgroundColor: "#f44336", //color
-          color: "#fff", // tx
-          border: "2px solid #f44336", // borde
-          borderRadius: "4px", // Redondea bordes
-          boxShadow: "0px 2px 4px rgba(0, 0, 0, 1)", //sombra
-          fontSize: "20px", //tamaño
-          fontWeight: "bold", //negrita
-          padding: "10px 20px" 
-        }}
-      >
-        Enviar Comprobante
-      </Button>
+          variant="secondary"
+          onClick={() => {
+            generarImage();
+          }}
+          style={{
+            backgroundColor: "#f44336", //color
+            color: "#fff", // tx
+            border: "2px solid #f44336", // borde
+            borderRadius: "4px", // Redondea bordes
+            boxShadow: "0px 2px 4px rgba(0, 0, 0, 1)", //sombra
+            fontSize: "20px", //tamaño
+            fontWeight: "bold", //negrita
+            padding: "10px 20px",
+          }}
+        >
+          Enviar Comprobante
+        </Button>
         </Modal.Footer>
       </Modal>
 

@@ -5,6 +5,7 @@ import { useState } from 'react';
 //import { getRepositories } from './api/api';
 //import RepositoryCarousel from '../components/RepositoryCarousel';
 import Footer from '../components/Footer';
+import '../firebase/config';
 
 const IndexPage = () => {
   const [username, setUsername] = useState('AaronBarboza');
@@ -27,6 +28,9 @@ const IndexPage = () => {
    // const data = await getRepositories(username);
     //setRepositories(data);
   };
+
+
+  
 
   return (
     <div style={{ marginTop: '50px' }} className="container">
