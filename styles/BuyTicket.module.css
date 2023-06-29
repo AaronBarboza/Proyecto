@@ -1,0 +1,77 @@
+.title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .info {
+    margin-bottom: 10px;
+  }
+  
+  .button {
+    background-color: #3C6E71;
+    border-radius: 5px;
+    color: white;
+    font-size: 1.2em;
+    width: 120px;
+    height: 40px;
+    cursor: hand;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  
+  .seatGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+    width: 220px; /* Ajusta el ancho según sea necesario */
+  }
+  
+  .seatRow {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  
+  .seat {
+    border-radius: 0;
+    background-color: transparent;
+    color: black;
+    width: 50px; /* Ajusta el ancho según sea necesario */
+    height: 50px; /* Ajusta el alto según sea necesario */
+    padding-bottom: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin: 5px;
+  }
+  
+  .seat-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  
+  .ocupado {
+    background-color: #f1e8dc;
+    color: white;
+  }
+  
+  .seleccionado {
+    background-color: #30b0a5;
+    color: black;
+  }
+  
+  .disponible {
+    background-color: #3C6E71;
+    color: black;
+  }
