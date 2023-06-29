@@ -1,5 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from '../components/Navbar';
+
 import BuyTicket from '../components/BuyTicket';
 import { useState } from 'react';
 //import { getRepositories } from './api/api';
