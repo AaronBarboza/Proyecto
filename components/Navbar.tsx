@@ -48,7 +48,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
     {
       id: 1,
       origin: 'Ciudad Neily',
-      destination: 'San José',
+      destination: 'Cuidad Cortes',
       tarifa: '₡5000',
       date: fechaActual ,
       time: '08:00 AM'
@@ -56,40 +56,40 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
     {
       id: 2,
       origin: 'Paso Canoas',
-      destination: 'San José',
-      tarifa: '₡9.889',
+      destination: 'Golfito',
+      tarifa: '₡2000',
       date: fechaActual,
       time: '07:00 AM'
     },
     {
       id: 3,
-      origin: 'Perez Zeledon',
-      destination: 'San Jose',
+      origin: 'Paso Canoas',
+      destination: 'Cuidad Cortes',
       tarifa: '₡4000',
       date: fechaActual,
       time: '12:00 AM'
       },
       {
         id: 4,
-        origin: 'Buenos Aires',
-        destination: 'San José',
-        tarifa: '₡7000',
+        origin: 'Cuidad Cortes ',
+        destination: 'Golfito',
+        tarifa: '₡6000',
         date: fechaActual,
         time: '11:00 AM'
       },
       {
         id: 5,
-        origin: 'Cartago',
-        destination: 'San José',
-        tarifa: '₡2000',
+        origin: 'Dominical ',
+        destination: 'Cuidad Neily',
+        tarifa: '₡5000',
         date: fechaActual,
         time: '02:00 PM'
       },
       {
         id: 6,
-        origin: 'Quepos',
-        destination: 'Heredia',
-        tarifa: '₡4500',
+        origin: 'Dominical',
+        destination: 'Golfito',
+        tarifa: '₡7000',
         date: fechaActual,
         time: '10:00 AM'
       },
@@ -119,7 +119,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
           </Nav>
         </Navbar.Collapse>
       </Navbar>
-      {/*modal primero Contacts*/}
+      {/modal primero Contacts/}
       <Modal show={showModal} onHide={handleCloseModal} size="lg" centered>
       <Modal.Header closeButton>
         <h1 style={{ 
@@ -147,7 +147,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
       </Modal.Body>
     </Modal>
 
-    {/*Segundo Modal para Sobre nosotros*/}
+    {/Segundo Modal para Sobre nosotros/}
     <Modal show={showAboutModal} onHide={handleCloseAboutModal} size="lg" centered>
     <div
       style={{
@@ -229,7 +229,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
     </Modal>
     
 
-    {/*Modal para Rutas y Horarios*/}
+    {/Modal para Rutas y Horarios/}
     
     <Modal show={showRutasModal} onHide={handleCloseAboutRutas} size="lg" centered>
     <Modal.Header closeButton>
@@ -269,7 +269,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
     </Modal.Body>
     </Modal>
 
-    {/*Modal para tarifa*/}
+    {/Modal para tarifa/}
 
     <Modal show={showTarifasModal} onHide={handleCloseAboutTarifas} size="lg" centered>
     <Modal.Header closeButton>
