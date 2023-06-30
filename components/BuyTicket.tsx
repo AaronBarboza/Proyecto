@@ -357,14 +357,11 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
 
         <p>Seleccione un método de pago:</p>
         <select value={metodoPago} onChange={handleMetodoPagoChange}>
-          <option value="Efectivi">Efectivo</option>
+          <option value="Efectivo">Efectivo</option>
           <option value="paypal">PayPal</option>
         </select>
         {metodoPago === 'Efectivo' && (
           <div>
-           
-              name="Efectivo"
-              value={efectivo}
           </div>
         )}
 
