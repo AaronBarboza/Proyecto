@@ -1,668 +1,567 @@
-import React, { useState, useEffect } from 'react';
+import styles from '../styles/BuyTicket.module.css';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import emailjs from 'emailjs-com';
 import QRCode from 'qrcode.react';
-import { time, timeStamp } from 'console';
-//import InvoiceModal from './InvoiceModal';
-import InvoiceModal from './factura';
+import emailjs from 'emailjs-com';
+import html2canvas from 'html2canvas';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import 'firebase/database';
+import { ChangeEvent} from 'react';
+import { database, storage } from "../firebase/config"
 
 
+interface DatosViaje {
+  origen: string;
+  destino: string;
+  fecha_salida: string;
+  boletosSeleccionados: number;
+}
+interface FacturaProps {
+  onClose: () => void;
+  datosViaje: DatosViaje;
+  asiento: string;
+}
 
-function BusTicketForm() {
-  /// Modal de formulario
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
-  const [date, setDate] = useState('');
-
-  /// Modal de formulario Pago
-  const [showModalPay, setShowModalPay] = useState(false);
-  const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
-    cantidad: 0,
-    fecha: '',
-    origen: '',
-    destino: '',
-    metodoPago: '',
-    hora: ''
-  });
-
-  //Para ACTUALIZAR LA FECHA
-  const fechaActual = new Date().toLocaleDateString('es-ES');
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setShowModal(true);
+function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosViaje: DatosViaje; asiento: number;
+}) {
+  const [metodoPago, setMetodoPago] = useState('');
+  const [numeroTarjeta, setNumeroTarjeta] = useState('');
+  const [datosPaypal, setDatosPaypal] = useState({ correo: '', contraseña: '' });
+  const handleMetodoPagoChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setMetodoPago(event.target.value);
   };
-
-  const handleClose = () => {
-    setShowModal(false);
+  const handleNumeroTarjetaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setNumeroTarjeta(event.target.value);
   };
-
-  const handleShowAboutPay = () => {
-    setShowModal(false);
-    setShowModalPay(true);
-  };
-
-  const handleCloseAboutPay = () => {
-    setShowModalPay(false);
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePaypalInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
+    setDatosPaypal((prevDatosPaypal) => ({
+      ...prevDatosPaypal,
       [name]: value
     }));
   };
-/*
-  const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    handleShowAboutPay();
-  };
-*/
-  {/*Correo*/}
-  
-  const handleSendEmail = () => {
-    const templateParams = {
-      to_email: formData.email,
-      from_name: 'Nombre Remitente', // Nombre remitente del correo electrónico
-      subject: 'Factura de compra', // Asunto del correo electrónico
-      body: `
-        Nombre: ${formData.nombre}
-        Correo electrónico: ${formData.email}
-        Cantidad de boletos: ${formData.cantidad}
-        Fecha de viaje: ${formData.fecha}
-        Origen: ${formData.origen}
-        Destino: ${formData.destino}
-        Método de pago: ${formData.metodoPago}
-      ` // Cuerpo del correo electrónico
+
+  const precioUnitario = 10; // Precio por boleto
+  const iva = 0.13; // Porcentaje de IVA
+
+  const subtotal = precioUnitario * datosViaje.boletosSeleccionados;
+  const montoIVA = subtotal * iva;
+  const total = subtotal + montoIVA;
+
+  {/Correo/}
+  const [fileContent, setFileContent] = useState('');
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result;
+        if (typeof content === 'string') {
+          setFileContent(content);
+        }
+      };
+      reader.readAsText(file);
+    }
   };
 
-    emailjs.send('<service_xbiqwg6>', '<plantilla_n2hof0i>', templateParams, '<RWxLClg-me91RdSat>')
-      .then((response) => {
-        console.log('Correo electrónico enviado con éxito:', response);
-        // Aquí puedes mostrar una notificación de éxito o realizar otras acciones después de enviar el correo electrónico
+  type EmailJSResponseStatus = {
+    status: number,
+    text: string,
+  }
+ 
+  function uploadAndSendEmail(file: File) {
+    // Crea una referencia de almacenamiento
+    const storageRef = ref(storage, 'images/' + file.name);
+  
+    // Sube el archivo de imagen y genera una URL de descarga
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        // Obtiene el progreso de la tarea, incluyendo el número de bytes subidos y el número total de bytes a subir
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        console.log('Upload is ' + progress + '% done');
+      },
+      (error) => {
+        // Maneja las subidas fallidas
+        console.error('Upload error:', error);
+      },
+      () => {
+        // Maneja las subidas exitosas al completarse y obtén la URL de descarga
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          console.log('File available at', downloadURL);
+  
+          // Construye la plantilla del correo utilizando cadenas de texto
+          const formData = {
+            nombre: 'Nombre del remitente', // Reemplaza con el valor correcto
+            email: 'email@example.com', // Reemplaza con el valor correcto
+          };
+          const attachments = [
+            {
+              name: 'comprobante.png',
+              data: downloadURL,
+            },
+          ];
+  
+          const emailTemplate = `
+            New message from ${formData.nombre}
+            You got a new message from ${formData.nombre}:
+
+            {{modal-content}}
+
+            ${attachments.length ? `
+              <img src="${attachments[0].data}" alt="${attachments[0].name}" style="max-width: 100%; height: auto;">
+              <p>
+                <a href="${attachments[0].data}" download="${attachments[0].name}">Descargar comprobante</a>
+              </p>
+            ` : ''}
+
+            Sent from ${formData.email}
+          `;
+          // Envía el correo con la plantilla renderizada
+          const templateParams = {
+            to_name: 'Recipient Name',
+            from_name: formData.nombre,
+            message: emailTemplate,
+            reply_to: formData.email,
+          };
+  
+          emailjs.send('service_narigrb', 'template_mha2rj2', templateParams, 'RWxLClg-me91RdSat')
+            .then((response: EmailJSResponseStatus) => {
+              console.log('SUCCESS!', response.status, response.text);
+            }, (err: Error) => {
+              console.error('FAILED...', err);
+            });
+        });
+      });
+  }
+  
+  const modalContentRef = useRef<HTMLDivElement>(null);
+  async function generarImage() {
+    const contentText = modalContentRef.current;
+  
+    if (!contentText) {
+      console.error('Error: contentText is null');
+      return;
+    }
+    const canvasOptions = {};
+    html2canvas(contentText, canvasOptions)
+      .then(async (canvas) => {
+        const resizedCanvas = resizeImage(canvas, 800, 600);
+  
+        const imgDataPNG = resizedCanvas.toDataURL('image/png', 0.05);
+        const filePNG = new File([b64toBlob(imgDataPNG, 'image/png')], 'comprobante.png', {
+          type: 'image/png',
+        });
+        uploadAndSendEmail(filePNG);
       })
       .catch((error) => {
-        console.error('Error al enviar el correo electrónico:', error);
-        // Aquí puedes mostrar una notificación de error o realizar otras acciones en caso de error
+        console.error('Error generating image:', error);
       });
-  };
-  
-  {/*QR*/}
-
-  let qrCodeData = JSON.stringify(formData);
-
-  const ModalComponent = () => {
-    const [showModal, setShowModal] = useState(false);
-    const [qrCodeData, setQRCodeData] = useState('');
-    const [formData, setFormData] = useState({
-      nombre: '',
-      email: '',
-      cantidad: 0,
-      fecha: '',
-      origen: '',
-      destino: '',
-      metodoPago: '',
-      hora: ''
-    });
-  /*
-    const handleShowModal = () => {
-      const qrCodeData = JSON.stringify(formData);
-      setQRCodeData(qrCodeData);
-      setShowModal(true);
-    };
-    
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        [name]: value
-      }));
-    };
-  */
   }
 
-  {/*Metodos de Pago*/}
+function b64toBlob(base64: string, type: string = ''): Blob {
+  const byteCharacters = atob(base64.replace(/^data:[^;]+;base64,/, ''));
+  const byteArrays: Uint8Array[] = [];
 
-  // En el archivo BuyTicket.tsx
-const handleConfirmCompra = () => {
-  if (formData.metodoPago === 'paypal') {
-    setShowModal(true);
-  } else if (formData.metodoPago === 'efectivo') {
-    // Lógica para abrir ventana de efectivo
-    window.open('https://www.example.com/efectivo', '_blank');
-  } else if (formData.metodoPago === 'tarjeta') {
-    // Lógica para abrir ventana de tarjeta de banco
-    window.open('https://www.example.com/efectivo', '_blank');
-  }
-};
+  for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+    const slice = byteCharacters.slice(offset, offset + 1024);
+    const byteNumbers = new Array(slice.length);
 
-// Nueva variable de estado para controlar la visibilidad del modal
-const [showModal, setShowModal] = useState(false);
-
-return (
-  <>
-    {/* Código existente del componente BuyTicket */}
-    
-    {/* Modal de factura */}
-    {showModal && (
-      <InvoiceModal
-        showModal={showModal}
-        setShowModal={setShowModal}
-        formData={{
-          nombre: formData.nombre,
-          email: formData.email,
-          cantidad: formData.cantidad,
-          fecha: formData.fecha,
-          origen: formData.origen,
-          destino: formData.destino,
-          metodoPago: formData.metodoPago,
-          hora: formData.hora,
-          // Agrega las demás propiedades de FormData aquí si las hay
-        }}
-        qrCodeData={qrCodeData}
-        handleSendEmail={handleSendEmail}
-      />
-    )}
-  </>
-);
-
-  
-  {/*Tabla con filtro*/}
-
-    const results = [
-      {
-        id: 1,
-        origin: 'Ciudad Neily',
-        destination: 'San Jose',
-        tarifa: '₡5000',
-        time: '08:00 AM'
-      },
-      {
-        id: 2,
-        origin: 'Paso Canoas',
-        destination: 'San Jose',
-        tarifa: '₡9.889',
-        time: '07:00 AM'
-      },
-      {
-        id: 3,
-        origin: 'Perez Zeledon',
-        destination: 'San Jose',
-        tarifa: '₡4000',       
-        time: '12:00 AM'
-        },
-        {
-          id: 4,
-          origin: 'Buenos Aires',
-          destination: 'San Jose',
-          tarifa: '₡7000', 
-          time: '11:00 AM'
-        },
-        {
-          id: 5,
-          origin: 'Cartago',
-          destination: 'San Jose',
-          tarifa: '₡2000',
-          time: '02:00 PM'
-        },
-        {
-          id: 6,
-          origin: 'Quepos',
-          destination: 'Heredia',
-          tarifa: '₡4500',
-          time: '10:00 AM'
-        },
-      ];
-
-      const filterResults = () => {
-        if (!origin && !destination && !date) {
-          return results;
-        }
-        return results.filter((result) => {
-          const originMatch = origin ? result.origin.toLowerCase().includes(origin.toLowerCase()) : true;
-          const destinationMatch = destination ? result.destination.toLowerCase().includes(destination.toLowerCase()) : true;
-          return originMatch && destinationMatch;
-        });
-      };
-      
-      const [HasResults, setHasResults] = useState(false);
-      useEffect(() => {
-        const filteredResults = filterResults();
-        if (filteredResults.length > 0) {
-          setHasResults(true);
-        } else {
-          setHasResults(false);
-        }
-      }, [origin, destination]);
-    //Para ACTUALIZAR LA FECHA
-  
-    const [setFechaActual] = useState<string[]>([]);   
-    const [totalSeats] = useState(36);
-    const [occupiedSeats, setOccupiedSeats] = useState(0); // Inicialmente no hay asientos ocupados
-  
-    const handleInputasientos = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedQuantity = parseInt(event.target.value);
-      if (!isNaN(selectedQuantity)) {
-        if (selectedQuantity >= 0 && selectedQuantity <= totalSeats) {
-          setOccupiedSeats(selectedQuantity);
-          setCantidadBoletos(selectedQuantity); // Update the quantity of tickets state
-        }
-      }
-    };
-  
-    const availableSeats = totalSeats - occupiedSeats;
-    const [cantidadBoletos, setCantidadBoletos] = useState(0);
-    //Para ACTUALIZAR variables en primer formulario
-    const [origen, setOrigen] = useState('');
-    const [destino, setDestino] = useState('');
-    const [tarifa, setTarifa] = useState('');
-    const [fecha, setFecha] = useState('');
-    const [hora, setHora] = useState('');
-
-    interface Result {
-      id: number;
-      origin: string;
-      destination: string;
-      tarifa: string;
-      time: string;
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
     }
-    
-    const handleComprarClick = (result: Result) => {
-      setOrigen(result.origin);
-      setDestino(result.destination);
-      setTarifa(result.tarifa);
-      setHora(result.time);
-      setFecha(date);
-    };
 
-    const [dates, setDates] = useState(Array(filterResults.length).fill(''));
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
 
-   
-  return (
-      <form onSubmit={handleSubmit} style={{ maxWidth: '1500px', margin: 'auto', display: 'flex', flexDirection: 'column' }}>
-      
-      <div style={{display: "flex",flexDirection: "row",justifyContent: "space-between",alignItems: "center",flexWrap: "wrap"}}>
-        <label htmlFor="origin" style={{ marginLeft: "20px" }}>Origen:</label>
-          <input
-            type="text"
-            id="origin"
-            value={origin}
-            onChange={(e) => setOrigin(e.target.value)}
-            style={{
-              width: '300px',
-              height: "40px",
-              backgroundColor: '#3C6E71',
-              color: 'white',
-              borderRadius: '5px'
-            }}
-          />
-          <label htmlFor="destination" style={{ marginLeft: "20px" }}>Destino:</label>
-          <input
-            type="text"
-            id="destination"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            style={{
-              width: '300px',
-              height: "40px",
-              backgroundColor: '#3C6E71',
-              color: 'white',
-              borderRadius: '5px',
-              marginLeft: "10px"
-            }}
-          />
-      </div>
+  return new Blob(byteArrays, { type });
+}
 
-      <br></br>
-      <br></br>
+function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: number): HTMLCanvasElement {
+  const width = canvas.width;
+  const height = canvas.height;
+  const ratio = Math.min(maxWidth / width, maxHeight / height);
 
-      <table style={{ flexWrap:"wrap", width: '100%', borderCollapse: 'collapse', backgroundColor: '#f1e8dc', borderRadius: '5px', marginBottom: '20px', overflowX: 'auto' }}>
-      <thead>
-        <tr style={{ backgroundColor: '#3C6E71', color: 'white' }}>
-          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71', borderTopLeftRadius: '5px' }}>Origen</th>
-          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Destino</th>
-          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Tarifa</th>
-          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Fecha</th>
-          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71' }}>Hora</th>
-          <th style={{ padding: '12px 8px', backgroundColor: '#3C6E71', borderTopRightRadius: '5px' }}>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filterResults().map((result, index) => (
-          <tr key={result.id}>
-            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopLeftRadius: '5px' }}>{result.origin}</td>
-            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.destination}</td>
-            <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.tarifa}</td>
-             <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
-              <input
-                type="date"
-                id={`date-${index}`}
-                value={dates[index]}
-                onChange={(e) => {
-                  const selectedDate = e.target.value;
-                  setDates((prevDates) => {
-                    const updatedDates = [...prevDates];
-                    updatedDates[index] = selectedDate;
-                    return updatedDates;
-                  });
-                }}
-                style={{
-                  width: '120px',
-                  height: '40px',
-                  backgroundColor: '#3C6E71',
-                  color: 'white',
-                  borderRadius: '5px',
-                  marginLeft: '10px'
-                }}
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </td>
-          <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71' }}>{result.time}</td>
-          <td style={{ padding: '12px 8px', borderBottom: '1px solid #3C6E71', borderTopRightRadius: '5px', textAlign: 'center' }}>
-          <Button
-            type="submit"
-            onClick={() => handleComprarClick(result)}
-            style={{
-              backgroundColor: '#3C6E71',
-              borderRadius: '5px',
-              color: 'white',
-              fontSize: '1.2em',
-              width: '120px',
-              height: '40px',
-              cursor: 'hand',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            Comprar
-          </Button>
-          </td>
-        </tr>
-          ))}
-        </tbody>
-      </table>
+  const newCanvas = document.createElement('canvas');
+  newCanvas.width = width * ratio;
+  newCanvas.height = height * ratio;
 
-      {/* Aqui se mostraran las ventanas emergentes*/}
+  const ctx = newCanvas.getContext('2d');
+  if (ctx) {
+    ctx.drawImage(canvas, 0, 0, width * ratio, height * ratio);
+  }
 
-      <Modal show={showModal} onHide={handleClose}>
-        {/* Contenido del modal */}
-        <Modal.Header>
-        <h1 style={{ 
-              backgroundColor: '#3C6E71',
-              color: 'white', 
-              padding: '5px', 
-              borderRadius: '5px', 
-              boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)', 
-              textAlign: 'center', 
-              fontSize: '1.5em', 
-              fontFamily: 'Arial, sans-serif'
-            }}>Validaremos tus Datos</h1>
-        </Modal.Header>
-        <Modal.Body>
-        <form>
-          
-        <div style={{ display: 'flex', flexDirection: 'row' }}>
-        <div style={{ marginRight: '20px' }}>
-        <div className="form-group">
-          <label htmlFor="nombre" style={{ color: '#3C6E71' }}>
-            Nombre:
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="nombre"
-            name="nombre"
-            required
-            onChange={handleInputChange}
-            style={{ width: '200px' }}
-          />
-        </div>
-        <br /><br />
-        <div className="form-group">
-          <label htmlFor="email" style={{ color: '#3C6E71' }}>
-            Correo electrónico:
-          </label>
-          <input
-            type="email"
-            className="form-control"
-            id="email"
-            name="email"
-            required
-            onChange={handleInputChange}
-            style={{ width: '200px' }}
-          />
-        </div>
-        <br /><br />
-        <div className="form-group">
-        <label htmlFor="cantidad" style={{ color: '#3C6E71' }}>
-          Cantidad de boletos:
-        </label>
-        <input
-          type="number"
-          className="form-control cantidad-input"
-          id="cantidad"
-          name="cantidad"
-          min="0"
-          max="15"
-          required
-          onChange={handleInputasientos}
-        />
-      </div>
-      </div>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
-      <div>
-        <label htmlFor="fecha" style={{ color: '#3C6E71' }}>
-          Fecha de viaje: {dates}
-        </label>
-      </div>
-      <div>
-        <label htmlFor="origen" style={{ color: '#3C6E71' }}>
-          Origen: {origen}
-        </label>
-      </div>
-      <div>
-        <label htmlFor="destino" style={{ color: '#3C6E71' }}>
-          Destino: {destino}
-        </label>
-      </div>
-      <div>
-        <label htmlFor="tarifa" style={{ color: '#3C6E71' }}>
-          Tarifa: {tarifa}
-        </label>
-      </div>
-      <div>
-        <label htmlFor="hora" style={{ color: '#3C6E71' }}>
-          Hora: {hora}
-        </label>
-      </div>
-    </div>
-
+  return newCanvas;
+}
   
 
-     
-    </div>
-
-    <br></br>
-          
-          <h1 style={{ 
-            backgroundColor: '#3C6E71',
-            color: 'white', 
-            padding: '5px', 
-            borderRadius: '5px', 
-            boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)', 
-            textAlign: 'center', 
-            fontSize: '1.5em', 
-            fontFamily: 'Arial, sans-serif'
-          }}>Asientos</h1>
-          <label htmlFor="destino" style={{ color: '#3C6E71', display: 'flex', justifyContent: 'space-between' }}>
-            <span>Total: {totalSeats}</span>
-            <span>Ocupados: {occupiedSeats}</span>
-            <span>Disponibles: {availableSeats}</span>
-          </label>
-        <br></br>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '455px' }}>
-        {Array.from({ length: 4 }, (_, seatIndex) => (
-          <div key={seatIndex} style={{ display: 'flex', marginBottom: '5px' }}>
-            {[...Array(9)].map((_, rowIndex) => (
-              <div
-                key={rowIndex}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  margin: '5px',
-                  backgroundColor: seatIndex + rowIndex * 4 + 1 <= occupiedSeats ? '#3077B0' : 'gray',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: '1px solid black',
-                  borderRadius: '4px',
-                }}
-              >
-                <span style={{ fontSize: '0.8em' }}>{seatIndex + rowIndex * 4 + 1}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
+{/QR/}
 
 
-
-        <br></br>
-          <h1 style={{ 
-            backgroundColor: '#3C6E71',
-            color: 'white', 
-            padding: '5px', 
-            borderRadius: '5px', 
-            boxShadow: '2px 2px 5px rgba(0, 0, 0, 0.2)', 
-            textAlign: 'center', 
-            fontSize: '1.5em', 
-            fontFamily: 'Arial, sans-serif'
-          }}>Metodo de Pago</h1>
-          <br /><br />
-          <div style={{ textAlign: 'center' }}>
-          <div className="form-check form-check-inline form-check-custom">
-            <input
-              className="form-check-input"
-              type="radio"
-              name="metodoPago"
-              id="paypal"
-              value="paypal"
-              required
-              onChange={handleInputChange}
-            />
-            <label className="form-check-label" htmlFor="paypal">
-              PayPal
-            </label>
-          </div>
-          <div className="form-check form-check-inline form-check-custom">
-            <input
-              className="form-check-input"
-              type="radio"
-              name="metodoPago"
-              id="efectivo"
-              value="efectivo"
-              required
-              onChange={handleInputChange}
-            />
-            <label className="form-check-label" htmlFor="efectivo">
-              Efectivo
-            </label>
-          </div>
-          <div className="form-check form-check-inline form-check-custom">
-            <input
-              className="form-check-input"
-              type="radio"
-              name="metodoPago"
-              id="tarjeta"
-              value="tarjeta"
-              required
-              onChange={handleInputChange}
-            />
-            <label className="form-check-label" htmlFor="tarjeta">
-              Tarjeta de Banco
-            </label>
-          </div>
-          </div>
-
-          <br/><br/>
-              <div className="d-flex justify-content-center">
-              <button
-                type="submit"
-                style={{ backgroundColor: '#3C6E71', color: 'white' }}
-                className="btn btn-lg btn-primary mr-3"
-                onClick={handleShowAboutPay} // Agrega el evento onClick para mostrar el Modal
-              >
-                Confirmar Compra
-              </button>
-                <button
-                  type="button"
-                  className="btn btn-lg btn-danger ml-3"
-                  data-dismiss="modal"
-                  onClick={handleClose}
-                  style={{ marginLeft: '10px', marginRight: '10px' }}
-                >
-                  Cancelar
-                </button>
-              </div>
-        </form>
-        </Modal.Body>
-      </Modal>
-
-      <Modal show={showModalPay} onHide={handleCloseAboutPay} size="lg" centered>
-        <Modal.Header closeButton style={{ backgroundColor: '#3C6E71', color: 'white', borderBottom: 'none' }}>
+  return (
+    <Modal show={true} onHide={onClose}>
+      <div id="modal-content" ref={modalContentRef}  >
+      <Modal.Header closeButton style={{ backgroundColor: '#3C6E71', color: 'white', borderBottom: 'none' }}>
         <Modal.Title style={{ fontSize: '2em', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
           Factura
         </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <h1 style={{ fontSize: '2em', color: '#3C6E71', fontFamily: 'Arial, sans-serif', textAlign: 'center' }}>
-            ¡Compra Exitosa!
-          </h1>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ paddingRight: '50px' }}>
-            <p>Nombre: {formData.nombre}</p>
-            <p>Correo electrónico: {formData.email}</p>
-            <p>Origen: {origen}</p>
-            <p>Destino: {destino}</p>
-            <p>Cantidad de boletos: {cantidadBoletos}</p>
-            <p>Fecha de viaje: {dates}</p>
-            <p>Hora: {hora}</p>
-            <p>Método de pago: {formData.metodoPago}</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '300px' }}>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', marginTop: '-150px' }}>
-            <QRCode value={qrCodeData} />
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-        <Button
-        variant="secondary"
-        onClick={handleSendEmail}
-        style={{
-          backgroundColor: "#f44336", //color
-          color: "#fff", // tx
-          border: "2px solid #f44336", // borde
-          borderRadius: "4px", // Redondea bordes
-          boxShadow: "0px 2px 4px rgba(0, 0, 0, 1)", //sombra
-          fontSize: "20px", //tamaño
-          fontWeight: "bold", //negrita
-          padding: "10px 20px" 
-        }}
-      >
-        Enviar Comprobante
-      </Button>
-        </Modal.Footer>
-      </Modal>
+      <Modal.Body>
+        <p>Detalles de la compra:</p>
+        <p>Origen: {datosViaje.origen}</p>
+        <p>Destino: {datosViaje.destino}</p>
+        <p>Fecha de salida: {datosViaje.fecha_salida}</p>
+        <p>Asiento seleccionado: {asiento}</p>
 
-    </form>
+        <p>Precio unitario: ${precioUnitario}</p>
+        <p>Cantidad de boletos: {datosViaje.boletosSeleccionados}</p>
+        <p>Subtotal: ${subtotal}</p>
+        <p>IVA: ${montoIVA}</p>
+        <p>Total: ${total}</p>
+
+        <p>Seleccione un método de pago:</p>
+        <select value={metodoPago} onChange={handleMetodoPagoChange}>
+          <option value="">-- Seleccione --</option>
+          <option value="tarjeta">Tarjeta de crédito</option>
+          <option value="paypal">PayPal</option>
+        </select>
+
+        {metodoPago === 'tarjeta' && (
+          <div>
+            <p>Ingrese el número de tarjeta:</p>
+            <input
+              type="text"
+              name="numeroTarjeta"
+              value={numeroTarjeta}
+              onChange={handleNumeroTarjetaChange}
+            />
+            <button onClick={() => setNumeroTarjeta('')}>
+              Cambiar tarjeta
+            </button>
+          </div>
+        )}
+
+        {metodoPago === 'paypal' && (
+          <div>
+            <p>Ingrese los datos de PayPal:</p>
+            <input
+              type="text"
+              name="correo"
+              value={datosPaypal.correo}
+              onChange={handlePaypalInputChange}
+              placeholder="Correo electrónico"
+            />
+            <input
+              type="password"
+              name="contraseña"
+              value={datosPaypal.contraseña}
+              onChange={handlePaypalInputChange}
+              placeholder="Contraseña"
+            />
+          </div>
+        )}
+
+        {metodoPago && (
+          <div>
+            <p>Código QR para el método de pago: {metodoPago}</p>
+            <QRCode value={metodoPago} />
+          </div>
+        )}
+      </Modal.Body>
+      </div>
+      <Modal.Footer>
+      <div className="d-flex justify-content-between">
+  <Button
+    variant="secondary"
+    onClick={() => {
+      generarImage();
+    }}
+    style={{
+      backgroundColor: "#3C6E71", //color
+      color: "#fff", // tx
+      border: "2px solid #000000", // borde
+      borderRadius: "4px", // Redondea bordes
+      boxShadow: "0px 2px 4px rgba(0, 0, 0, 1)", //sombra
+      fontSize: "20px", //tamaño
+      fontWeight: "bold", //negrita
+      padding: "10px 20px",
+      marginRight: "50px", // Separación horizontal de 100px
+    }}
+  >
+    Pagar
+  </Button>
+  <Button
+    variant="secondary"
+    onClick={() => {
+      generarImage();
+    }}
+    style={{
+      backgroundColor: "#f44336", //color
+      color: "#fff", // tx
+      border: "2px solid #f44336", // borde
+      borderRadius: "4px", // Redondea bordes
+      boxShadow: "0px 2px 4px rgba(0, 0, 0, 1)", //sombra
+      fontSize: "20px", //tamaño
+      fontWeight: "bold", //negrita
+      padding: "10px 20px",
+      marginLeft: "50px", // Separación horizontal de 100px
+    }}
+  >
+    Enviar Comprobante
+  </Button>
+</div>
+
+      </Modal.Footer>
+    </Modal>
   );
 }
 
-export default BusTicketForm; 
+function BuyTicket() {
+  type DatosViaje = {
+    origen: string;
+    destino: string;
+    fecha_salida: string;
+    hora_salida: string;
+    boletosSeleccionados: number | null;
+  }
+  
+  const [datosViaje, setDatosViaje] = useState<DatosViaje>({
+    origen: "",
+    destino: "",
+    fecha_salida: "",
+    hora_salida: "",
+    boletosSeleccionados: null,
+  });
+  
+  const currentDate = new Date().toISOString().split('T')[0];//fecha actual
+
+  const [asiento, setAsiento] = useState('');
+  const [boletosSeleccionados, setBoletosSeleccionados] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+
+  const NUMERO_ASIENTOS = 56;
+  const [asientos, setAsientos] = useState(new Array(NUMERO_ASIENTOS).fill('disponible'));
+  const disponibles = NUMERO_ASIENTOS - boletosSeleccionados;
+
+  const asientoElegido = (indice: number) => {
+    if (asientos[indice] === 'disponible') {
+      if (boletosSeleccionados < 4) {
+        setAsiento('A' + (indice + 1));
+        setBoletosSeleccionados(boletosSeleccionados + 1);
+        const nuevosAsientos = [...asientos];
+        nuevosAsientos[indice] = 'ocupado';
+        setAsientos(nuevosAsientos);
+      }
+    } else if (asientos[indice] === 'ocupado') {
+      setAsiento('');
+      setBoletosSeleccionados(boletosSeleccionados - 1);
+      const nuevosAsientos = [...asientos];
+      nuevosAsientos[indice] = 'disponible';
+      setAsientos(nuevosAsientos);
+    }
+  };
+
+  const renderSeats = () => {
+    const columnas = 14; // Número de columnas de asientos
+    const filas = 4; // Número de filas de asientos
+  
+    const seats = [];
+    let indice = 0;
+  
+    for (let i = 0; i < filas; i++) {
+      const fila = [];
+      for (let j = 0; j < columnas; j++) {
+        const asientoIndex = indice + j;
+        const asiento = asientos[asientoIndex];
+        fila.push(
+          <div
+            key={asientoIndex}
+            className={`${styles.seat} ${styles[asiento]}`}
+            onClick={() => asientoElegido(asientoIndex)}
+          >
+            {asiento === 'disponible' ? asientoIndex + 1 : ''}
+          </div>
+        );
+      }
+      seats.push(
+        <div key={i} className={styles.seatRow}>
+          {fila}
+        </div>
+      );
+      indice += columnas;
+    }
+  
+    return seats;
+  };
+  
+
+  const handleInputSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setDatosViaje((prevDatosViaje) => ({
+      ...prevDatosViaje,
+      [name]: value
+    }));
+  };
+  
+  const handleContinuar = () => {
+    if (datosViaje.origen === datosViaje.destino) {
+      alert('El origen y el destino no pueden ser iguales.');
+      return;
+    }
+
+    const fechaSeleccionada = new Date(datosViaje.fecha_salida);
+    const fechaActual = new Date();
+    const maxFechaAntesSalida = new Date();
+    maxFechaAntesSalida.setDate(fechaActual.getDate() + 2);
+
+    if (fechaSeleccionada < fechaActual) {
+      alert('No se pueden seleccionar fechas anteriores a la fecha actual.');
+      return;
+    }
+
+    if (fechaSeleccionada > maxFechaAntesSalida) {
+      alert('No se pueden seleccionar fechas más de 2 días antes de la fecha de salida.');
+      return;
+    }
+
+    setDatosViaje((prevDatosViaje) => ({
+      ...prevDatosViaje,
+      boletosSeleccionados
+    }));
+    
+    setShowModal(true);
+  };
+
+
+  const [horaSalida, setHoraSalida] = useState("");
+
+  const handleHoraSalidaChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setHoraSalida(event.target.value);
+  };
+  
+  
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDatosViaje({
+      ...datosViaje,
+      [event.target.name]: event.target.value,
+    });
+  };
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setDatosViaje({
+      ...datosViaje,
+      [event.target.name]: event.target.value,
+    });
+  };
+
+
+  interface IDatosViaje {
+    origen: string;
+    destino: string;
+    fecha_salida: string;
+    hora_salida: string;
+  }
+  return (
+    <div>
+      
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+  <label style={{ margin: "0 10px" }}>
+    Origen:
+    <select name="origen" value={datosViaje.origen} onChange={handleSelectChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }}>
+      <option value="">Selecciona el origen</option>
+      <option value="Cuidad Neily">Cuidad Neily</option>
+      <option value="Paso Canoas">Paso Canoas</option>
+      <option value="Golfito">Golfito</option>
+      <option value="Cuidad Cortes">Cuidad Cortes</option>
+      <option value="Dominical">Dominical</option>
+    </select>
+  </label>
+  <label style={{ margin: "0 10px" }}>
+    Destino:
+    <select name="destino" value={datosViaje.destino} onChange={handleSelectChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }}>
+      <option value="">Selecciona el destino</option>
+      <option value="Cuidad Neily">Cuidad Neily</option>
+      <option value="Paso Canoas">Paso Canoas</option>
+      <option value="Golfito">Golfito</option>
+      <option value="Cuidad Cortes">Cuidad Cortes</option>
+      <option value="Dominical">Dominical</option>
+    </select>
+  </label>
+  <label style={{ margin: "0 10px" }}>
+    Fecha de salida:
+    <input type="date" name="fecha_salida" value={datosViaje.fecha_salida} onChange={handleInputChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }} />
+  </label>
+  <label style={{ margin: "0 10px" }}>
+    Hora de salida:
+    <select name="hora_salida" value={datosViaje.hora_salida} onChange={handleSelectChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }}>
+      <option value="">Selecciona la hora de salida</option>
+      <option value="08:00">08:00 AM</option>
+      <option value="09:00">09:00 AM</option>
+      <option value="10:00">10:00 AM</option>
+      <option value="08:00">12:00 PM</option>
+      <option value="09:00">02:00 PM</option>
+      <option value="10:00">04:00 PM</option>
+      <option value="10:00">06:00 PM</option>
+      {/* Añade más opciones de horas según tus necesidades */}
+    </select>
+  </label>
+</div>
+
+      
+      <div style={{ marginBottom: '60px' }}></div>
+      <label htmlFor="destino" style={{ color: '#3C6E71', display: 'flex', justifyContent: 'space-between' }}>
+        <span>Total: {NUMERO_ASIENTOS}</span>
+        <span>Ocupados: {boletosSeleccionados}</span>
+        <span>Disponibles: {disponibles}</span>
+      </label>
+      <div style={{ marginBottom: '30px' }}></div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }} >
+       <p className={styles.info}>Asiento seleccionado: {asiento}</p>
+      </div>
+      
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        marginTop: '20px',
+      }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+        <div className="seat-container" style={{ marginLeft: 'auto', position: 'relative', right: '165px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', width: '455px', flexWrap: 'wrap', marginBottom: '10px', marginTop: '20px' }}>
+            {renderSeats()}
+            {boletosSeleccionados >= 4 && (
+              <>
+                <p className={styles.errorMessage} style={{ color: 'red' }}>
+                  No se pueden comprar más de 4 boletos.
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+
+     </div>
+      
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+        <button className={styles.button} onClick={handleContinuar}>
+          Continuar
+        </button>
+      </div>
+
+
+      {showModal && (
+  <Factura 
+    onClose={() => setShowModal(false)} 
+    datosViaje={{...datosViaje, boletosSeleccionados: datosViaje.boletosSeleccionados || 0}} 
+    asiento={Number(asiento)} 
+  />
+)}
+
+    </div>
+  );
+}
+
+export default BuyTicket;
