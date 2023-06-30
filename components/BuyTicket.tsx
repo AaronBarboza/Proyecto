@@ -27,13 +27,13 @@ interface FacturaProps {
 function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosViaje: DatosViaje; asiento: number;
 }) {
   const [metodoPago, setMetodoPago] = useState('');
-  const [numeroTarjeta, setNumeroTarjeta] = useState('');
+  const [efectivo, setefectivo] = useState('');
   const [datosPaypal, setDatosPaypal] = useState({ correo: '', contraseña: '' });
   const handleMetodoPagoChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setMetodoPago(event.target.value);
   };
   const handleNumeroTarjetaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNumeroTarjeta(event.target.value);
+    setefectivo(event.target.value);
   };
   const handlePaypalInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -54,6 +54,14 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
     },
     {
       id: 2,
+      origin: 'Cuidad Cortes',
+      destination: 'Ciudad Neily',
+      tarifa: '₡5000',
+      date: fechaActual ,
+      time: '07:00 AM'
+    },
+    {
+      id: 3,
       origin: 'Paso Canoas',
       destination: 'Golfito',
       tarifa: '₡2000',
@@ -61,23 +69,33 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
       time: '07:00 AM'
     },
     {
-      id: 3,
-      origin: 'Paso Canoas',
-      destination: 'Cuidad Cortes',
-      tarifa: '₡4000',
+      id: 4,
+      origin: 'Golfito',
+      destination: 'Paso Canoas',
+      tarifa: '₡2000',
       date: fechaActual,
-      time: '12:00 AM'
-      },
+      time: '06:00 AM'
+    },
+   
       {
-        id: 4,
+        id: 5,
         origin: 'Cuidad Cortes ',
         destination: 'Golfito',
         tarifa: '₡6000',
         date: fechaActual,
         time: '11:00 AM'
       },
+      
       {
-        id: 5,
+        id: 6,
+        origin: 'Golfito',
+        destination: 'Cuidad Cortes',
+        tarifa: '₡6000',
+        date: fechaActual,
+        time: '11:00 AM'
+      },
+      {
+        id: 7,
         origin: 'Dominical ',
         destination: 'Cuidad Neily',
         tarifa: '₡5000',
@@ -85,24 +103,63 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
         time: '02:00 PM'
       },
       {
-        id: 6,
+        id: 8,
+        origin: 'Cuidad Neily',
+        destination: 'Dominical',
+        tarifa: '₡5000',
+        date: fechaActual,
+        time: '02:00 PM'
+      },
+      {
+        id: 9,
         origin: 'Dominical',
         destination: 'Golfito',
         tarifa: '₡7000',
         date: fechaActual,
         time: '10:00 AM'
       },
+      {
+        id: 10,
+        origin: 'Golfito',
+        destination: 'Dominical',
+        tarifa: '₡7000',
+        date: fechaActual,
+        time: '11:00 AM'
+      },
+      {
+        id: 11,
+        origin: 'Golfito',
+        destination: 'Paso Canoas',
+        tarifa: '₡600',
+        date: fechaActual,
+        time: '11:00 AM'
+      }, 
+      {
+        id: 12,
+        origin: 'Paso Canoas',
+        destination: 'Golfito',
+        tarifa: '₡600',
+        date: fechaActual,
+        time: '11:00 AM'
+      },  
     ];
 
 
-  const precioUnitario = 10; // Precio por boleto
-  const iva = 0.13; // Porcentaje de IVA
 
-
-  const subtotal = precioUnitario * datosViaje.boletosSeleccionados;
-  const montoIVA = subtotal * iva;
-  const total = subtotal + montoIVA;
-
+    const datosViajeSeleccionado = results.find(
+      (result) =>
+        result.origin === datosViaje.origen && result.destination === datosViaje.destino
+    );
+  
+    const precioUnitario = datosViajeSeleccionado ? parseInt(datosViajeSeleccionado.tarifa.replace('₡', '')) : 0;
+    const iva = 0.13;
+  
+    const subtotal = isNaN(precioUnitario) || isNaN(datosViaje.boletosSeleccionados)
+      ? 0
+      : precioUnitario * datosViaje.boletosSeleccionados;
+  
+    const montoIVA = subtotal * iva;
+    const total = subtotal + montoIVA;
 
   {/Correo/}
   const [fileContent, setFileContent] = useState('');
@@ -309,10 +366,10 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
             <input
               type="text"
               name="numeroTarjeta"
-              value={numeroTarjeta}
+              value={efectivo}
               onChange={handleNumeroTarjetaChange}
             />
-            <button onClick={() => setNumeroTarjeta('')}>
+            <button onClick={() => setefectivo('')}>
               Cambiar tarjeta
             </button>
           </div>

@@ -45,54 +45,105 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
   const fechaActual = new Date().toLocaleDateString('es-ES');
   //Para Tablas
   const results = [
-    {
-      id: 1,
-      origin: 'Ciudad Neily',
-      destination: 'Cuidad Cortes',
-      tarifa: '₡5000',
-      date: fechaActual ,
-      time: '08:00 AM'
-    },
-    {
-      id: 2,
-      origin: 'Paso Canoas',
-      destination: 'Golfito',
-      tarifa: '₡2000',
-      date: fechaActual,
-      time: '07:00 AM'
-    },
-    {
-      id: 3,
-      origin: 'Paso Canoas',
-      destination: 'Cuidad Cortes',
-      tarifa: '₡4000',
-      date: fechaActual,
-      time: '12:00 AM'
+    
+      {
+        id: 1,
+        origin: 'Ciudad Neily',
+        destination: 'Cuidad Cortes',
+        tarifa: '₡5000',
+        date: fechaActual ,
+        time: '08:00 AM'
+      },
+      {
+        id: 2,
+        origin: 'Cuidad Cortes',
+        destination: 'Ciudad Neily',
+        tarifa: '₡5000',
+        date: fechaActual ,
+        time: '07:00 AM'
+      },
+      {
+        id: 3,
+        origin: 'Paso Canoas',
+        destination: 'Golfito',
+        tarifa: '₡2000',
+        date: fechaActual,
+        time: '07:00 AM'
       },
       {
         id: 4,
-        origin: 'Cuidad Cortes ',
-        destination: 'Golfito',
-        tarifa: '₡6000',
+        origin: 'Golfito',
+        destination: 'Paso Canoas',
+        tarifa: '₡2000',
         date: fechaActual,
-        time: '11:00 AM'
+        time: '06:00 AM'
       },
-      {
-        id: 5,
-        origin: 'Dominical ',
-        destination: 'Cuidad Neily',
-        tarifa: '₡5000',
-        date: fechaActual,
-        time: '02:00 PM'
-      },
-      {
-        id: 6,
-        origin: 'Dominical',
-        destination: 'Golfito',
-        tarifa: '₡7000',
-        date: fechaActual,
-        time: '10:00 AM'
-      },
+     
+        {
+          id: 5,
+          origin: 'Cuidad Cortes ',
+          destination: 'Golfito',
+          tarifa: '₡6000',
+          date: fechaActual,
+          time: '11:00 AM'
+        },
+        {
+          id: 6,
+          origin: 'Golfito',
+          destination: 'Cuidad Cortes',
+          tarifa: '₡6000',
+          date: fechaActual,
+          time: '11:00 AM'
+        },
+        {
+          id: 7,
+          origin: 'Dominical ',
+          destination: 'Cuidad Neily',
+          tarifa: '₡5000',
+          date: fechaActual,
+          time: '02:00 PM'
+        },
+  
+        {
+          id: 8,
+          origin: 'Cuidad Neily',
+          destination: 'Dominical',
+          tarifa: '₡5000',
+          date: fechaActual,
+          time: '02:00 PM'
+        },
+        {
+          id: 9,
+          origin: 'Dominical',
+          destination: 'Golfito',
+          tarifa: '₡7000',
+          date: fechaActual,
+          time: '10:00 AM'
+        },
+        {
+          id: 10,
+          origin: 'Golfito',
+          destination: 'Dominical',
+          tarifa: '₡7000',
+          date: fechaActual,
+          time: '11:00 AM'
+        }, 
+        {
+          id: 11,
+          origin: 'Golfito',
+          destination: 'Paso Canoas',
+          tarifa: '₡600',
+          date: fechaActual,
+          time: '11:00 AM'
+        }, 
+        {
+          id: 12,
+          origin: 'Paso Canoas',
+          destination: 'Golfito',
+          tarifa: '₡600',
+          date: fechaActual,
+          time: '11:00 AM'
+        }, 
     ];
 
 
