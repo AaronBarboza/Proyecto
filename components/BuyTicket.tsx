@@ -14,6 +14,7 @@ interface DatosViaje {
   origen: string;
   destino: string;
   fecha_salida: string;
+  hora_salida: string;
   boletosSeleccionados: number;
 }
 interface FacturaProps {
@@ -21,6 +22,7 @@ interface FacturaProps {
   datosViaje: DatosViaje;
   asiento: string;
 }
+
 
 function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosViaje: DatosViaje; asiento: number;
 }) {
@@ -40,16 +42,71 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
       [name]: value
     }));
   };
+  const fechaActual = new Date().toLocaleDateString('es-ES');
+  const results = [
+    {
+      id: 1,
+      origin: 'Ciudad Neily',
+      destination: 'Cuidad Cortes',
+      tarifa: '₡5000',
+      date: fechaActual ,
+      time: '08:00 AM'
+    },
+    {
+      id: 2,
+      origin: 'Paso Canoas',
+      destination: 'Golfito',
+      tarifa: '₡2000',
+      date: fechaActual,
+      time: '07:00 AM'
+    },
+    {
+      id: 3,
+      origin: 'Paso Canoas',
+      destination: 'Cuidad Cortes',
+      tarifa: '₡4000',
+      date: fechaActual,
+      time: '12:00 AM'
+      },
+      {
+        id: 4,
+        origin: 'Cuidad Cortes ',
+        destination: 'Golfito',
+        tarifa: '₡6000',
+        date: fechaActual,
+        time: '11:00 AM'
+      },
+      {
+        id: 5,
+        origin: 'Dominical ',
+        destination: 'Cuidad Neily',
+        tarifa: '₡5000',
+        date: fechaActual,
+        time: '02:00 PM'
+      },
+      {
+        id: 6,
+        origin: 'Dominical',
+        destination: 'Golfito',
+        tarifa: '₡7000',
+        date: fechaActual,
+        time: '10:00 AM'
+      },
+    ];
+
 
   const precioUnitario = 10; // Precio por boleto
   const iva = 0.13; // Porcentaje de IVA
+
 
   const subtotal = precioUnitario * datosViaje.boletosSeleccionados;
   const montoIVA = subtotal * iva;
   const total = subtotal + montoIVA;
 
+
   {/Correo/}
   const [fileContent, setFileContent] = useState('');
+
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -65,6 +122,7 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
     }
   };
 
+
   type EmailJSResponseStatus = {
     status: number,
     text: string,
@@ -76,6 +134,7 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
   
     // Sube el archivo de imagen y genera una URL de descarga
     const uploadTask = uploadBytesResumable(storageRef, file);
+
 
     uploadTask.on('state_changed',
       (snapshot) => {
@@ -108,7 +167,9 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
             New message from ${formData.nombre}
             You got a new message from ${formData.nombre}:
 
+
             {{modal-content}}
+
 
             ${attachments.length ? `
               <img src="${attachments[0].data}" alt="${attachments[0].name}" style="max-width: 100%; height: auto;">
@@ -116,6 +177,7 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
                 <a href="${attachments[0].data}" download="${attachments[0].name}">Descargar comprobante</a>
               </p>
             ` : ''}
+
 
             Sent from ${formData.email}
           `;
@@ -161,42 +223,52 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
       });
   }
 
+
 function b64toBlob(base64: string, type: string = ''): Blob {
   const byteCharacters = atob(base64.replace(/^data:[^;]+;base64,/, ''));
   const byteArrays: Uint8Array[] = [];
+
 
   for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
     const slice = byteCharacters.slice(offset, offset + 1024);
     const byteNumbers = new Array(slice.length);
 
+
     for (let i = 0; i < slice.length; i++) {
       byteNumbers[i] = slice.charCodeAt(i);
     }
+
 
     const byteArray = new Uint8Array(byteNumbers);
     byteArrays.push(byteArray);
   }
 
+
   return new Blob(byteArrays, { type });
 }
+
 
 function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: number): HTMLCanvasElement {
   const width = canvas.width;
   const height = canvas.height;
   const ratio = Math.min(maxWidth / width, maxHeight / height);
 
+
   const newCanvas = document.createElement('canvas');
   newCanvas.width = width * ratio;
   newCanvas.height = height * ratio;
+
 
   const ctx = newCanvas.getContext('2d');
   if (ctx) {
     ctx.drawImage(canvas, 0, 0, width * ratio, height * ratio);
   }
 
-  return newCanvas;
+
+  return newCanvas;
 }
   
+
 
 {/QR/}
 
@@ -214,27 +286,38 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
         <p>Origen: {datosViaje.origen}</p>
         <p>Destino: {datosViaje.destino}</p>
         <p>Fecha de salida: {datosViaje.fecha_salida}</p>
+        <p>Hora de salida: {datosViaje.hora_salida}</p>
         <p>Asiento seleccionado: {asiento}</p>
-
         <p>Precio unitario: ${precioUnitario}</p>
         <p>Cantidad de boletos: {datosViaje.boletosSeleccionados}</p>
         <p>Subtotal: ${subtotal}</p>
         <p>IVA: ${montoIVA}</p>
         <p>Total: ${total}</p>
 
+
         <p>Seleccione un método de pago:</p>
         <select value={metodoPago} onChange={handleMetodoPagoChange}>
           <option value="">-- Seleccione --</option>
-          <option value="Efectivo">Efectivo</option>
+          <option value="tarjeta">Tarjeta de crédito</option>
           <option value="paypal">PayPal</option>
         </select>
 
-        {metodoPago === 'Efectivo' && (
+
+        {metodoPago === 'tarjeta' && (
           <div>
-            
-              name="Efectivo"
+            <p>Ingrese el número de tarjeta:</p>
+            <input
+              type="text"
+              name="numeroTarjeta"
+              value={numeroTarjeta}
+              onChange={handleNumeroTarjetaChange}
+            />
+            <button onClick={() => setNumeroTarjeta('')}>
+              Cambiar tarjeta
+            </button>
           </div>
         )}
+
 
         {metodoPago === 'paypal' && (
           <div>
@@ -255,6 +338,7 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
             />
           </div>
         )}
+
 
         {metodoPago && (
           <div>
@@ -306,10 +390,12 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
   </Button>
 </div>
 
+
       </Modal.Footer>
     </Modal>
   );
 }
+
 
 function BuyTicket() {
   type DatosViaje = {
@@ -318,7 +404,7 @@ function BuyTicket() {
     fecha_salida: string;
     hora_salida: string;
     boletosSeleccionados: number | null;
-  }
+  };
   
   const [datosViaje, setDatosViaje] = useState<DatosViaje>({
     origen: "",
@@ -328,15 +414,19 @@ function BuyTicket() {
     boletosSeleccionados: null,
   });
   
+  
   const currentDate = new Date().toISOString().split('T')[0];//fecha actual
+
 
   const [asiento, setAsiento] = useState('');
   const [boletosSeleccionados, setBoletosSeleccionados] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
+
   const NUMERO_ASIENTOS = 56;
   const [asientos, setAsientos] = useState(new Array(NUMERO_ASIENTOS).fill('disponible'));
   const disponibles = NUMERO_ASIENTOS - boletosSeleccionados;
+
 
   const asientoElegido = (indice: number) => {
     if (asientos[indice] === 'disponible') {
@@ -355,6 +445,7 @@ function BuyTicket() {
       setAsientos(nuevosAsientos);
     }
   };
+
 
   const renderSeats = () => {
     const columnas = 14; // Número de columnas de asientos
@@ -390,6 +481,7 @@ function BuyTicket() {
   };
   
 
+
   const handleInputSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
     setDatosViaje((prevDatosViaje) => ({
@@ -404,20 +496,24 @@ function BuyTicket() {
       return;
     }
 
+
     const fechaSeleccionada = new Date(datosViaje.fecha_salida);
     const fechaActual = new Date();
     const maxFechaAntesSalida = new Date();
     maxFechaAntesSalida.setDate(fechaActual.getDate() + 2);
+
 
     if (fechaSeleccionada < fechaActual) {
       alert('No se pueden seleccionar fechas anteriores a la fecha actual.');
       return;
     }
 
+
     if (fechaSeleccionada > maxFechaAntesSalida) {
       alert('No se pueden seleccionar fechas más de 2 días antes de la fecha de salida.');
       return;
     }
+
 
     setDatosViaje((prevDatosViaje) => ({
       ...prevDatosViaje,
@@ -430,11 +526,13 @@ function BuyTicket() {
 
   const [horaSalida, setHoraSalida] = useState("");
 
+
   const handleHoraSalidaChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setHoraSalida(event.target.value);
   };
   
   
+
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDatosViaje({
@@ -448,8 +546,8 @@ function BuyTicket() {
       [event.target.name]: event.target.value,
     });
   };
-
-
+    
+    
   interface IDatosViaje {
     origen: string;
     destino: string;
@@ -487,20 +585,32 @@ function BuyTicket() {
     <input type="date" name="fecha_salida" value={datosViaje.fecha_salida} onChange={handleInputChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }} />
   </label>
   <label style={{ margin: "0 10px" }}>
-    Hora de salida:
-    <select name="hora_salida" value={datosViaje.hora_salida} onChange={handleSelectChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }}>
-      <option value="">Selecciona la hora de salida</option>
-      <option value="08:00">08:00 AM</option>
-      <option value="09:00">09:00 AM</option>
-      <option value="10:00">10:00 AM</option>
-      <option value="08:00">12:00 PM</option>
-      <option value="09:00">02:00 PM</option>
-      <option value="10:00">04:00 PM</option>
-      <option value="10:00">06:00 PM</option>
-      {/* Añade más opciones de horas según tus necesidades */}
-    </select>
-  </label>
+        Hora de salida:
+        <select
+          name="hora_salida"
+          value={datosViaje.hora_salida}
+          onChange={handleSelectChange}
+          style={{
+            width: '300px',
+            height: "40px",
+            backgroundColor: '#3C6E71',
+            color: 'white',
+            borderRadius: '5px'
+          }}
+        >
+          <option value="">Selecciona la hora de salida</option>
+          <option value="08:00">08:00 AM</option>
+          <option value="09:00">09:00 AM</option>
+          <option value="10:00">10:00 AM</option>
+          <option value="12:00">12:00 PM</option>
+          <option value="14:00">02:00 PM</option>
+          <option value="16:00">04:00 PM</option>
+          <option value="18:00">06:00 PM</option>
+          {/* Añade más opciones de horas según tus necesidades */}
+        </select>
+      </label>
 </div>
+
 
       
       <div style={{ marginBottom: '60px' }}></div>
@@ -552,8 +662,10 @@ function BuyTicket() {
   />
 )}
 
+
     </div>
   );
 }
+
 
 export default BuyTicket;
