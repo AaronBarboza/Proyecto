@@ -23,7 +23,6 @@ interface FacturaProps {
   asiento: string;
 }
 
-
 function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosViaje: DatosViaje; asiento: number;
 }) {
   const [metodoPago, setMetodoPago] = useState('');
@@ -289,7 +288,6 @@ function b64toBlob(base64: string, type: string = ''): Blob {
   const byteCharacters = atob(base64.replace(/^data:[^;]+;base64,/, ''));
   const byteArrays: Uint8Array[] = [];
 
-
   for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
     const slice = byteCharacters.slice(offset, offset + 1024);
     const byteNumbers = new Array(slice.length);
@@ -329,7 +327,6 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
   return newCanvas;
 }
   
-
 
 {/QR/}
 
@@ -578,13 +575,11 @@ function BuyTicket() {
 
   const [horaSalida, setHoraSalida] = useState("");
 
-
   const handleHoraSalidaChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setHoraSalida(event.target.value);
   };
   
   
-
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setDatosViaje({
@@ -713,7 +708,6 @@ function BuyTicket() {
     asiento={Number(asiento)} 
   />
 )}
-
 
     </div>
   );
