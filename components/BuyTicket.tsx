@@ -348,12 +348,11 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
         <p>Destino: {datosViaje.destino}</p>
         <p>Fecha de salida: {datosViaje.fecha_salida}</p>
         <p>Hora de salida: {datosViaje.hora_salida}</p>
-        <p>Asiento seleccionado: {asiento}</p>
-        <p>Precio unitario: ${precioUnitario}</p>
+        <p>Precio unitario: ₡{precioUnitario}</p>
         <p>Cantidad de boletos: {datosViaje.boletosSeleccionados}</p>
-        <p>Subtotal: ${subtotal}</p>
-        <p>IVA: ${montoIVA}</p>
-        <p>Total: ${total}</p>
+        <p>Subtotal: ₡{subtotal}</p>
+        <p>IVA: ₡ {montoIVA}</p>
+        <p>Total:₡ {total}</p>
 
 
         <p>Seleccione un método de pago:</p>
