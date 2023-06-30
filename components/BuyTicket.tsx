@@ -344,7 +344,6 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
         <p>Destino: {datosViaje.destino}</p>
         <p>Fecha de salida: {datosViaje.fecha_salida}</p>
         <p>Hora de salida: {datosViaje.hora_salida}</p>
-        <p>Asiento seleccionado: {asiento}</p>
         <p>Precio unitario: ${precioUnitario}</p>
         <p>Cantidad de boletos: {datosViaje.boletosSeleccionados}</p>
         <p>Subtotal: ${subtotal}</p>
@@ -354,24 +353,15 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
 
         <p>Seleccione un método de pago:</p>
         <select value={metodoPago} onChange={handleMetodoPagoChange}>
-          <option value="">-- Seleccione --</option>
-          <option value="tarjeta">Tarjeta de crédito</option>
-          <option value="paypal">PayPal</option>
+
+          <option value="Efectivo">Efectivo</option>
+          <option value="Paypal">PayPal</option>
         </select>
 
 
-        {metodoPago === 'tarjeta' && (
+        {metodoPago === 'Efectivo' && (
           <div>
-            <p>Ingrese el número de tarjeta:</p>
-            <input
-              type="text"
-              name="numeroTarjeta"
-              value={efectivo}
-              onChange={handleNumeroTarjetaChange}
-            />
-            <button onClick={() => setefectivo('')}>
-              Cambiar tarjeta
-            </button>
+           
           </div>
         )}
 
