@@ -155,7 +155,7 @@ const MyNavbar = ({ handleSearch, handlePersonal, activeTab }: Props) => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="mr-auto" activeKey={activeTab} style={{ backgroundColor: '#3C6E71', color: 'white', padding: '10px', letterSpacing: '10px', fontSize: '8px', borderRadius: '5px' }}>
             <Nav.Link onClick={handleShowTarifasModal} style={{ fontSize: '17px', color: 'white', marginRight: '20px', fontWeight: 'bold' }}>
-              Rutas
+              Tarifas
             </Nav.Link>
             <Nav.Link  onClick={handleShowRutasModal} style={{ fontSize: '17px', color: 'white', marginRight: '20px', fontWeight: 'bold' }}>
               Rutas&horarios

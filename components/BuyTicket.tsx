@@ -29,6 +29,10 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
   const [metodoPago, setMetodoPago] = useState('');
   const [efectivo, setefectivo] = useState('');
   const [datosPaypal, setDatosPaypal] = useState({ correo: '', contraseña: '' });
+  const handleValidarPaypal = () => {
+  };
+  const [paypalValidado, setPaypalValidado] = useState(false);
+
   const handleMetodoPagoChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setMetodoPago(event.target.value);
   };
@@ -135,7 +139,7 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
         time: '11:00 AM'
       }, 
       {
-        id: 12,
+        id: 1,
         origin: 'Paso Canoas',
         destination: 'Golfito',
         tarifa: '₡600',
@@ -344,6 +348,7 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
         <p>Destino: {datosViaje.destino}</p>
         <p>Fecha de salida: {datosViaje.fecha_salida}</p>
         <p>Hora de salida: {datosViaje.hora_salida}</p>
+        <p>Asiento seleccionado: {asiento}</p>
         <p>Precio unitario: ${precioUnitario}</p>
         <p>Cantidad de boletos: {datosViaje.boletosSeleccionados}</p>
         <p>Subtotal: ${subtotal}</p>
@@ -353,39 +358,53 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
 
         <p>Seleccione un método de pago:</p>
         <select value={metodoPago} onChange={handleMetodoPagoChange}>
-
-          <option value="Efectivo">Efectivo</option>
-          <option value="Paypal">PayPal</option>
+          <option value="">-- Seleccione --</option>
+          <option value="tarjeta">Tarjeta de crédito</option>
+          <option value="paypal">PayPal</option>
         </select>
 
 
-        {metodoPago === 'Efectivo' && (
+        {metodoPago === 'tarjeta' && (
           <div>
-           
-          </div>
-        )}
-
-
-        {metodoPago === 'paypal' && (
-          <div>
-            <p>Ingrese los datos de PayPal:</p>
+            <p>Ingrese el número de tarjeta:</p>
             <input
               type="text"
-              name="correo"
-              value={datosPaypal.correo}
-              onChange={handlePaypalInputChange}
-              placeholder="Correo electrónico"
+              name="numeroTarjeta"
+              value={efectivo}
+              onChange={handleNumeroTarjetaChange}
             />
-            <input
-              type="password"
-              name="contraseña"
-              value={datosPaypal.contraseña}
-              onChange={handlePaypalInputChange}
-              placeholder="Contraseña"
-            />
+            <button onClick={() => setefectivo('')}>
+              Cambiar tarjeta
+            </button>
           </div>
         )}
 
+{metodoPago === 'paypal' && (
+  <div>
+    <p>Ingrese los datos de PayPal:</p>
+    <input
+      type="text"
+      name="correo"
+      value={datosPaypal.correo}
+      onChange={handlePaypalInputChange}
+      placeholder="Correo electrónico"
+    />
+    <input
+      type="password"
+      name="contraseña"
+      value={datosPaypal.contraseña}
+      onChange={handlePaypalInputChange}
+      placeholder="Contraseña"
+    />
+    <button onClick={handleValidarPaypal}>Validar PayPal</button>
+    {datosPaypal.correo != "gabyaleman52@gmail.com" || datosPaypal.contraseña !== "Lygbrl3129" && (
+      <p>Debe ingresar una cuenta de PayPal válida.</p>
+    )}
+    {datosPaypal.correo === "gabyaleman52@gmail.com" && datosPaypal.contraseña === "Lygbrl3129" && (
+      <p>Los datos de PayPal son correctos. ¿Desea continuar con el pago?</p>
+    )}
+  </div>
+)}
 
         {metodoPago && (
           <div>
