@@ -1,4 +1,3 @@
-
 import styles from '../styles/BuyTicket.module.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button } from 'react-bootstrap';
@@ -15,6 +14,7 @@ interface DatosViaje {
   origen: string;
   destino: string;
   fecha_salida: string;
+  hora_salida: string;
   boletosSeleccionados: number;
 }
 interface FacturaProps {
@@ -41,6 +41,57 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
       [name]: value
     }));
   };
+  const fechaActual = new Date().toLocaleDateString('es-ES');
+  const results = [
+    {
+      id: 1,
+      origin: 'Ciudad Neily',
+      destination: 'Cuidad Cortes',
+      tarifa: '₡5000',
+      date: fechaActual ,
+      time: '08:00 AM'
+    },
+    {
+      id: 2,
+      origin: 'Paso Canoas',
+      destination: 'Golfito',
+      tarifa: '₡2000',
+      date: fechaActual,
+      time: '07:00 AM'
+    },
+    {
+      id: 3,
+      origin: 'Paso Canoas',
+      destination: 'Cuidad Cortes',
+      tarifa: '₡4000',
+      date: fechaActual,
+      time: '12:00 AM'
+      },
+      {
+        id: 4,
+        origin: 'Cuidad Cortes ',
+        destination: 'Golfito',
+        tarifa: '₡6000',
+        date: fechaActual,
+        time: '11:00 AM'
+      },
+      {
+        id: 5,
+        origin: 'Dominical ',
+        destination: 'Cuidad Neily',
+        tarifa: '₡5000',
+        date: fechaActual,
+        time: '02:00 PM'
+      },
+      {
+        id: 6,
+        origin: 'Dominical',
+        destination: 'Golfito',
+        tarifa: '₡7000',
+        date: fechaActual,
+        time: '10:00 AM'
+      },
+    ];
 
   const precioUnitario = 10; // Precio por boleto
   const iva = 0.13; // Porcentaje de IVA
@@ -49,7 +100,7 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
   const montoIVA = subtotal * iva;
   const total = subtotal + montoIVA;
 
-  {/*Correo*/}
+  {/Correo/}
   const [fileContent, setFileContent] = useState('');
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -199,7 +250,7 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
 }
   
 
-{/*QR*/}
+{/QR/}
 
 
   return (
@@ -215,8 +266,8 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
         <p>Origen: {datosViaje.origen}</p>
         <p>Destino: {datosViaje.destino}</p>
         <p>Fecha de salida: {datosViaje.fecha_salida}</p>
+        <p>Hora de salida: {datosViaje.hora_salida}</p>
         <p>Asiento seleccionado: {asiento}</p>
-
         <p>Precio unitario: ${precioUnitario}</p>
         <p>Cantidad de boletos: {datosViaje.boletosSeleccionados}</p>
         <p>Subtotal: ${subtotal}</p>
@@ -321,12 +372,23 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
 }
 
 function BuyTicket() {
-  const [datosViaje, setDatosViaje] = useState({
-    origen: '',
-    destino: '',
-    fecha_salida: '',
-    boletosSeleccionados: 0
+  type DatosViaje = {
+    origen: string;
+    destino: string;
+    fecha_salida: string;
+    hora_salida: string;
+    boletosSeleccionados: number | null;
+  };
+  
+  const [datosViaje, setDatosViaje] = useState<DatosViaje>({
+    origen: "",
+    destino: "",
+    fecha_salida: "",
+    hora_salida: "",
+    boletosSeleccionados: null,
   });
+  
+  
   const currentDate = new Date().toISOString().split('T')[0];//fecha actual
 
   const [asiento, setAsiento] = useState('');
@@ -397,16 +459,6 @@ function BuyTicket() {
     }));
   };
   
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setDatosViaje((prevDatosViaje) => ({
-      ...prevDatosViaje,
-      [name]: value
-    }));
-  };
-  
-  
-  
   const handleContinuar = () => {
     if (datosViaje.origen === datosViaje.destino) {
       alert('El origen y el destino no pueden ser iguales.');
@@ -432,44 +484,75 @@ function BuyTicket() {
       ...prevDatosViaje,
       boletosSeleccionados
     }));
-
+    
     setShowModal(true);
   };
 
+
+  const [horaSalida, setHoraSalida] = useState("");
+
+  const handleHoraSalidaChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setHoraSalida(event.target.value);
+  };
+  
+  
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDatosViaje({
+      ...datosViaje,
+      [event.target.name]: event.target.value,
+    });
+  };
+  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setDatosViaje({
+      ...datosViaje,
+      [event.target.name]: event.target.value,
+    });
+  };
+    
+    
+  interface IDatosViaje {
+    origen: string;
+    destino: string;
+    fecha_salida: string;
+    hora_salida: string;
+  }
   return (
     <div>
       
-      <div style={{display: "flex",flexDirection: "row",justifyContent: "space-between",alignItems: "center",flexWrap: "wrap"}} >
-      <label style={{ marginLeft: "20px" }} >
-        Origen:
-        <select name="origen" value={datosViaje.origen} onChange={handleInputSelectChange} style={{ width: '300px',height: "40px", backgroundColor: '#3C6E71', color: 'white',borderRadius: '5px'}} >
-          <option value="">Selecciona el origen</option>
-          <option value="Cuidad Neily">Cuidad Neily</option>
-          <option value="Paso Canoas">Paso Canoas</option>
-          <option value="Golfito">Golfito</option>
-          <option value="Cuidad Cortes">Cuidad Cortes</option>
-          <option value="Dominical">Dominical</option>
-        </select>
-      </label>
-      <label style={{ marginLeft: "20px" }} >
-        Destino:
-        <select name="destino" value={datosViaje.destino} onChange={handleInputSelectChange} style={{ width: '300px',height: "40px", backgroundColor: '#3C6E71', color: 'white',borderRadius: '5px'}} >
-          <option value="">Selecciona el destino</option>
-          <option value="Cuidad Neily">Cuidad Neily</option>
-          <option value="Paso Canoas">Paso Canoas</option>
-          <option value="Golfito">Golfito</option>
-          <option value="Cuidad Cortes">Cuidad Cortes</option>
-          <option value="Dominical">Dominical</option>
-          
-        </select>
-      </label>
-      <label style={{ marginLeft: "20px" }} >
-        Fecha de salida:
-        <input
-          type="date"
-          name="fecha_salida"
-          value={datosViaje.fecha_salida}
-          onChange={handleInputChange}
+      <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+  <label style={{ margin: "0 10px" }}>
+    Origen:
+    <select name="origen" value={datosViaje.origen} onChange={handleSelectChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }}>
+      <option value="">Selecciona el origen</option>
+      <option value="Cuidad Neily">Cuidad Neily</option>
+      <option value="Paso Canoas">Paso Canoas</option>
+      <option value="Golfito">Golfito</option>
+      <option value="Cuidad Cortes">Cuidad Cortes</option>
+      <option value="Dominical">Dominical</option>
+    </select>
+  </label>
+  <label style={{ margin: "0 10px" }}>
+    Destino:
+    <select name="destino" value={datosViaje.destino} onChange={handleSelectChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }}>
+      <option value="">Selecciona el destino</option>
+      <option value="Cuidad Neily">Cuidad Neily</option>
+      <option value="Paso Canoas">Paso Canoas</option>
+      <option value="Golfito">Golfito</option>
+      <option value="Cuidad Cortes">Cuidad Cortes</option>
+      <option value="Dominical">Dominical</option>
+    </select>
+  </label>
+  <label style={{ margin: "0 10px" }}>
+    Fecha de salida:
+    <input type="date" name="fecha_salida" value={datosViaje.fecha_salida} onChange={handleInputChange} style={{ width: '300px', height: "40px", backgroundColor: '#3C6E71', color: 'white', borderRadius: '5px' }} />
+  </label>
+  <label style={{ margin: "0 10px" }}>
+        Hora de salida:
+        <select
+          name="hora_salida"
+          value={datosViaje.hora_salida}
+          onChange={handleSelectChange}
           style={{
             width: '300px',
             height: "40px",
@@ -477,10 +560,20 @@ function BuyTicket() {
             color: 'white',
             borderRadius: '5px'
           }}
-        />
+        >
+          <option value="">Selecciona la hora de salida</option>
+          <option value="08:00">08:00 AM</option>
+          <option value="09:00">09:00 AM</option>
+          <option value="10:00">10:00 AM</option>
+          <option value="12:00">12:00 PM</option>
+          <option value="14:00">02:00 PM</option>
+          <option value="16:00">04:00 PM</option>
+          <option value="18:00">06:00 PM</option>
+          {/* Añade más opciones de horas según tus necesidades */}
+        </select>
       </label>
-        
-      </div>
+</div>
+
       
       <div style={{ marginBottom: '60px' }}></div>
       <label htmlFor="destino" style={{ color: '#3C6E71', display: 'flex', justifyContent: 'space-between' }}>
@@ -516,10 +609,6 @@ function BuyTicket() {
 
      </div>
       
-
-      
-      
-
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
         <button className={styles.button} onClick={handleContinuar}>
           Continuar
@@ -528,8 +617,13 @@ function BuyTicket() {
 
 
       {showModal && (
-        <Factura onClose={() => setShowModal(false)} datosViaje={datosViaje} asiento={Number(asiento)} />
-      )}
+  <Factura 
+    onClose={() => setShowModal(false)} 
+    datosViaje={{...datosViaje, boletosSeleccionados: datosViaje.boletosSeleccionados || 0}} 
+    asiento={Number(asiento)} 
+  />
+)}
+
     </div>
   );
 }
