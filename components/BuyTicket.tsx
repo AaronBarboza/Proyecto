@@ -358,24 +358,14 @@ function resizeImage(canvas: HTMLCanvasElement, maxWidth: number, maxHeight: num
 
         <p>Seleccione un método de pago:</p>
         <select value={metodoPago} onChange={handleMetodoPagoChange}>
-          <option value="">-- Seleccione --</option>
-          <option value="tarjeta">Tarjeta de crédito</option>
+          <option value="Efectivi">Efectivo</option>
           <option value="paypal">PayPal</option>
         </select>
-
-
-        {metodoPago === 'tarjeta' && (
+        {metodoPago === 'Efectivo' && (
           <div>
-            <p>Ingrese el número de tarjeta:</p>
-            <input
-              type="text"
-              name="numeroTarjeta"
+           
+              name="Efectivo"
               value={efectivo}
-              onChange={handleNumeroTarjetaChange}
-            />
-            <button onClick={() => setefectivo('')}>
-              Cambiar tarjeta
-            </button>
           </div>
         )}
 
