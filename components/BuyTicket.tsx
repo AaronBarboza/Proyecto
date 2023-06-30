@@ -95,7 +95,7 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
         destination: 'Cuidad Cortes',
         tarifa: '₡6000',
         date: fechaActual,
-        time: '11:00 AM'
+        time: '13:00 PM'
       },
       {
         id: 7,
@@ -133,18 +133,85 @@ function Factura({ onClose, datosViaje, asiento }: {onClose: () => void;datosVia
         id: 11,
         origin: 'Golfito',
         destination: 'Paso Canoas',
-        tarifa: '₡600',
+        tarifa: '₡2000',
         date: fechaActual,
-        time: '11:00 AM'
+        time: '12:00 PM'
       }, 
       {
-        id: 1,
+        id: 12,
         origin: 'Paso Canoas',
+        destination: 'Golfito',
+        tarifa: '₡2000',
+        date: fechaActual,
+        time: '1O:00 AM'
+      },  
+      {
+        id: 13,
+        origin: 'Cuidad Neily',
         destination: 'Golfito',
         tarifa: '₡600',
         date: fechaActual,
         time: '11:00 AM'
-      },  
+      },
+      {
+        id: 14,
+        origin: 'Golfito',
+        destination: 'Cuidad Neily',
+        tarifa: '₡600',
+        date: fechaActual,
+        time: '11:00 AM'
+      },
+      {
+        id: 15,
+        origin: 'Cuidad Neily',
+        destination: 'Paso canoas',
+        tarifa: '₡600',
+        date: fechaActual,
+        time: '1:00 PM'
+      },
+      {
+        id: 16,
+        origin: 'Paso Canoas',
+        destination: 'Cuidad Neily',
+        tarifa: '₡600',
+        date: fechaActual,
+        time: '12:00 PM'
+      },
+      {
+        id: 17,
+        origin: ' Dominical',
+        destination: 'Cuidad Neily',
+        tarifa: '₡6000',
+        date: fechaActual,
+        time: '03:00 PM'
+      },
+      {
+        id: 18,
+        origin: 'Cuidad Neily',
+        destination: 'Dominical',
+        tarifa: '₡6000',
+        date: fechaActual,
+        time: '1:00 PM'
+      },
+
+      {
+        id: 19,
+        origin: ' Dominical',
+        destination: 'CuidaD Cortes',
+        tarifa: '₡2500',
+        date: fechaActual,
+        time: '03:00 PM'
+      },
+      {
+        id: 20,
+        origin: 'Cuidad Cortes',
+        destination: 'Dominical',
+        tarifa: '₡2500',
+        date: fechaActual,
+        time: '1:00 PM'
+      },
+    
+    
     ];
 
 
@@ -545,24 +612,22 @@ function BuyTicket() {
       return;
     }
 
-
     const fechaSeleccionada = new Date(datosViaje.fecha_salida);
     const fechaActual = new Date();
     const maxFechaAntesSalida = new Date();
-    maxFechaAntesSalida.setDate(fechaActual.getDate() + 2);
-
-
+    maxFechaAntesSalida.setDate(fechaActual.getDate() + 1);
+    
     if (fechaSeleccionada < fechaActual) {
       alert('No se pueden seleccionar fechas anteriores a la fecha actual.');
       return;
     }
-
-
+    
     if (fechaSeleccionada > maxFechaAntesSalida) {
       alert('No se pueden seleccionar fechas más de 2 días antes de la fecha de salida.');
       return;
     }
-
+    
+   
 
     setDatosViaje((prevDatosViaje) => ({
       ...prevDatosViaje,
@@ -646,12 +711,18 @@ function BuyTicket() {
           }}
         >
           <option value="">Selecciona la hora de salida</option>
+          <option value="06:00">06:00 AM</option>
+          <option value="07:00">07:00 AM</option>
           <option value="08:00">08:00 AM</option>
           <option value="09:00">09:00 AM</option>
           <option value="10:00">10:00 AM</option>
+          <option value="11:00">11:00 AM</option>
           <option value="12:00">12:00 PM</option>
-          <option value="14:00">02:00 PM</option>
+          <option value="13:00">01:00 PM</option>
+          <option value="14:00">14:00 PM</option>
+          <option value="15:00">15:00 PM</option>
           <option value="16:00">04:00 PM</option>
+          <option value="17:00">17:00 PM</option>
           <option value="18:00">06:00 PM</option>
           {/* Añade más opciones de horas según tus necesidades */}
         </select>
